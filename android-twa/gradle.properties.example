@@ -1,0 +1,27 @@
+# Ground Android TWA Gradle Configuration Example
+#
+# To use this file:
+# 1. Copy this file to gradle.properties (in this directory)
+# 2. Fill in the actual paths and passwords
+# 3. DO NOT commit gradle.properties to version control
+#
+# gradle.properties is already listed in .gitignore
+
+android.useAndroidX=true
+org.gradle.jvmargs=-Xmx2048m
+
+# Signing configuration for release builds
+# Only required if building release APKs
+
+# Full path to your keystore file
+# Example: /home/user/.android/ground-keystore.jks
+# KEYSTORE_FILE=/full/path/to/ground-keystore.jks
+
+# Password for the keystore
+# KEYSTORE_PASSWORD=your_keystore_password
+
+# Alias of the key within the keystore
+# KEY_ALIAS=ground-key
+
+# Password for the specific key
+# KEY_PASSWORD=your_key_password

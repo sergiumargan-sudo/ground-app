@@ -1,0 +1,26 @@
+# Gradle
+.gradle/
+build/
+*.apk
+*.aab
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.DS_Store
+
+# Keystores and sensitive files
+*.jks
+*.p12
+*.keystore
+keystore-base64.txt
+gradle.properties
+
+# Local gradle.properties (contains signing credentials)
+local.properties
+
+# Build outputs
+app/build/

@@ -1,0 +1,3112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#FDFBF5">
+  <title>Ground — Closure-state readings for high-stakes decisions</title>
+  <style>
+    /* =================================================================
+       Ground — v0.5 Institutional Design System
+       Ring 2 primary. Reference: SSRN, Harvard Law Review, IRB docs.
+       ================================================================= */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      /* Surface */
+      --paper:        #FDFBF5;
+      --paper-2:      #F6F2E8;
+      --rule:         #1D2A44;
+      --rule-soft:    #D8D1BE;
+
+      /* Ink */
+      --ink:          #0E1524;
+      --ink-2:        #3B465C;
+      --ink-3:        #6B7388;
+
+      /* Accent — single ink-blue, structural only */
+      --accent:       #1C3A7A;
+      --accent-soft:  #E5E9F3;
+
+      /* Structural warning — safety override + looping only */
+      --flag:         #5B1A1A;
+
+      /* Typography */
+      --serif:        "Source Serif Pro","Iowan Old Style","Palatino Linotype","Palatino","Georgia",serif;
+      --sans:         "Inter","Helvetica Neue","Arial",sans-serif;
+      --mono:         "JetBrains Mono","SF Mono","Consolas",monospace;
+
+      --col:          720px;
+      --safe-bottom:  env(safe-area-inset-bottom, 16px);
+
+      /* Legacy token aliases — JS/CSS elsewhere may still reference them */
+      --bg:           var(--paper);
+      --bg-card:      var(--paper);
+      --bg-input:     var(--paper);
+      --text:         var(--ink);
+      --text-dim:     var(--ink-2);
+      --text-faint:   var(--ink-3);
+      --accent-glow:  rgba(28, 58, 122, 0.12);
+      --warning:      var(--flag);
+      --danger:       var(--flag);
+      --positive:     var(--accent);
+      --negative:     var(--flag);
+      --radius:       0;
+      --radius-sm:    0;
+    }
+
+    html, body { background: var(--paper); }
+
+    body {
+      color: var(--ink);
+      font-family: var(--serif);
+      font-size: 17px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+      font-feature-settings: "liga","kern","onum";
+    }
+
+    button, input, select, textarea, .ui, .nav, label,
+    .form-label, .optional-field-label, .optional-header-label,
+    .usage-label, .tab-button, .card-label, .signature-label,
+    .history-date, .history-tag, .history-detail-label,
+    .transparency-label, .crisis-title,
+    .section-badge, .inv-badge, .inv-key,
+    .history-modal-header h2 {
+      font-family: var(--sans);
+    }
+
+    code, .mono, .signature-value {
+      font-family: var(--mono);
+      font-size: 0.92em;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    a:hover { color: var(--ink); }
+
+    .container {
+      width: 100%;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 48px;
+      padding-bottom: calc(96px + var(--safe-bottom));
+    }
+
+    .screen {
+      display: none;
+      animation: fadeIn 0.25s ease-in-out;
+    }
+    .screen.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(2px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* =================================================================
+       Masthead / app header
+       ================================================================= */
+    .app-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--rule);
+      padding: 28px 0 16px;
+      margin-bottom: 40px;
+    }
+    .app-header-left {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+    }
+    .app-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 0;
+      transform: translateY(-3px);
+    }
+    .app-header-title {
+      font-family: var(--serif);
+      font-weight: 600;
+      font-size: 24px;
+      letter-spacing: 0.005em;
+      color: var(--ink);
+    }
+    .app-header-sub {
+      font-family: var(--sans);
+      font-size: 11px;
+      color: var(--ink-3);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .btn-settings {
+      background: none;
+      border: none;
+      color: var(--ink-3);
+      font-family: var(--sans);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      padding: 6px 0;
+      transition: color 120ms ease;
+    }
+    .btn-settings:hover { color: var(--ink); }
+    .app-header-right {
+      display: flex;
+      align-items: baseline;
+      gap: 22px;
+    }
+    .btn-header-link {
+      background: none;
+      border: none;
+      color: var(--ink-3);
+      font-family: var(--sans);
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      padding: 6px 0;
+      transition: color 120ms ease;
+    }
+    .btn-header-link:hover { color: var(--ink); }
+
+    /* =================================================================
+       Typography
+       ================================================================= */
+    h1, h2, h3, h4 {
+      font-family: var(--serif);
+      font-weight: 600;
+      line-height: 1.35;
+    }
+    h1 { font-size: 34px; letter-spacing: -0.005em; margin-bottom: 16px; }
+    h2 { font-size: 22px; margin-bottom: 12px; }
+    h3 { font-size: 17px; margin-bottom: 10px; }
+
+    p { margin-bottom: 14px; }
+
+    /* =================================================================
+       ONBOARDING — setup screen (institutional)
+       ================================================================= */
+    .screen-onboarding {
+      padding-top: 32px;
+    }
+    .app-icon {
+      display: none; /* hide the consumer-app circle icon */
+    }
+    .app-title {
+      font-family: var(--serif);
+      font-weight: 600;
+      font-size: 40px;
+      letter-spacing: -0.01em;
+      margin-bottom: 8px;
+      color: var(--ink);
+    }
+    .app-title-kicker {
+      font-family: var(--sans);
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-bottom: 14px;
+    }
+    .app-subtitle {
+      font-family: var(--serif);
+      font-size: 18px;
+      line-height: 1.55;
+      color: var(--ink-2);
+      max-width: 640px;
+      margin-bottom: 36px;
+    }
+
+    .onboarding-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px 48px;
+      margin-bottom: 40px;
+    }
+    .form-section { text-align: left; }
+    .form-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--ink-2);
+      margin-bottom: 8px;
+    }
+
+    select, .tone-chips { width: 100%; }
+    select {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--rule);
+      border-radius: 0;
+      color: var(--ink);
+      padding: 8px 0;
+      font-family: var(--sans);
+      font-size: 15px;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: linear-gradient(45deg, transparent 50%, var(--ink-2) 50%),
+                        linear-gradient(135deg, var(--ink-2) 50%, transparent 50%);
+      background-position: calc(100% - 12px) 14px, calc(100% - 7px) 14px;
+      background-size: 5px 5px;
+      background-repeat: no-repeat;
+    }
+    select:hover { border-bottom-color: var(--accent); }
+    select:focus {
+      outline: none;
+      border-bottom-color: var(--accent);
+      box-shadow: none;
+    }
+
+    .tone-chips {
+      display: flex;
+      gap: 0;
+      border: 1px solid var(--rule);
+      margin-top: 4px;
+    }
+    .tone-chip {
+      flex: 1;
+      min-width: 60px;
+      padding: 10px 8px;
+      border: none;
+      border-right: 1px solid var(--rule-soft);
+      border-radius: 0;
+      background: var(--paper);
+      color: var(--ink-2);
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      transition: background 120ms ease, color 120ms ease;
+    }
+    .tone-chip:last-child { border-right: none; }
+    .tone-chip:hover { background: var(--paper-2); color: var(--ink); }
+    .tone-chip.active {
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    .form-help {
+      font-family: var(--serif);
+      font-size: 13px;
+      color: var(--ink-3);
+      font-style: italic;
+      line-height: 1.55;
+      grid-column: 1 / -1;
+      max-width: 720px;
+    }
+
+    .btn-primary, .btn-reflect, .btn-new-reflection {
+      padding: 12px 24px;
+      border: 1px solid var(--ink);
+      border-radius: 0;
+      background: var(--ink);
+      color: var(--paper);
+      font-family: var(--sans);
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      transition: background 120ms ease, border-color 120ms ease;
+      min-width: 200px;
+    }
+    .btn-primary:hover:not(:disabled),
+    .btn-reflect:hover:not(:disabled),
+    .btn-new-reflection:hover:not(:disabled) {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .btn-primary:disabled,
+    .btn-reflect:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .btn-primary { margin-top: 0; }
+    .btn-reflect, .btn-new-reflection { margin-top: 24px; }
+
+    .privacy-notice {
+      font-family: var(--sans);
+      font-size: 13px;
+      color: var(--ink-2);
+      margin-top: 40px;
+      padding: 18px 22px;
+      background: var(--paper-2);
+      border-left: 2px solid var(--accent);
+      border-top: none;
+      line-height: 1.6;
+    }
+
+    /* =================================================================
+       MAIN screen — submission
+       ================================================================= */
+    .screen-main { padding-bottom: 32px; }
+
+    .pre-submission-sentence {
+      font-family: var(--serif);
+      font-size: 15px;
+      color: var(--ink-2);
+      font-style: italic;
+      border-left: 2px solid var(--accent);
+      padding: 6px 0 6px 18px;
+      margin: 0 0 28px;
+      max-width: 640px;
+    }
+
+
+    .evidence-cue {
+      margin: 0 0 24px;
+      padding: 14px 16px;
+      border-left: 3px solid var(--accent);
+      background: var(--paper-2);
+      font-family: var(--sans);
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--ink-2);
+    }
+    .evidence-cue strong {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .usage-bar { margin-bottom: 16px; max-width: 360px; }
+    .usage-label {
+      font-family: var(--sans);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--ink-3);
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .usage-bar-track {
+      width: 100%;
+      height: 2px;
+      background: var(--rule-soft);
+    }
+    .usage-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      transition: width 0.3s ease;
+    }
+
+    .limit-card {
+      padding: 10px 0 18px;
+      font-family: var(--sans);
+      font-size: 12px;
+      color: var(--ink-3);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .limit-card strong {
+      color: var(--ink);
+      font-weight: 600;
+      font-family: var(--mono);
+      font-size: 13px;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .textarea-section { margin-bottom: 24px; }
+
+    textarea {
+      width: 100%;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 0;
+      color: var(--ink);
+      padding: 18px 20px;
+      font-family: var(--serif);
+      font-size: 16px;
+      line-height: 1.55;
+      resize: vertical;
+      min-height: 180px;
+    }
+    textarea::placeholder { color: var(--ink-3); font-style: italic; }
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: none;
+    }
+
+    .optional-section { margin-bottom: 20px; }
+    .optional-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-top: 1px solid var(--rule-soft);
+      border-bottom: 1px solid var(--rule-soft);
+      cursor: pointer;
+      user-select: none;
+    }
+    .optional-header-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--ink-2);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .optional-toggle {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink-2);
+      font-family: var(--mono);
+      font-size: 14px;
+      background: transparent;
+      border: none;
+    }
+    .optional-header:hover .optional-toggle { color: var(--accent); }
+
+    .optional-content {
+      display: none;
+      flex-direction: column;
+      gap: 18px;
+      padding: 20px 0;
+    }
+    .optional-content.active { display: flex; }
+    .optional-field-group { display: flex; flex-direction: column; gap: 6px; }
+    .optional-field-label {
+      font-size: 11px;
+      color: var(--ink-2);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .optional-field-label small {
+      font-weight: 400;
+      color: var(--ink-3);
+      font-style: italic;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    textarea.optional-textarea { min-height: 90px; }
+
+    .char-count {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--ink-3);
+      margin-bottom: 16px;
+    }
+
+    /* =================================================================
+       PROCESSING screen
+       ================================================================= */
+    .screen-processing {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: flex-start;
+      min-height: 60vh;
+      padding-top: 80px;
+    }
+    .processing-orb {
+      display: none; /* replaced with monospace ledger */
+    }
+    .processing-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-bottom: 24px;
+    }
+    .processing-stages {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+    }
+    .stage-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 0;
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--ink-3);
+      border-bottom: 1px solid var(--rule-soft);
+      transition: color 0.3s ease;
+    }
+    .stage-row.active { color: var(--ink); }
+    .stage-row.complete { color: var(--ink-2); }
+
+    .stage-dot {
+      width: 10px;
+      height: 10px;
+      border: 1px solid var(--rule);
+      background: var(--paper);
+      flex-shrink: 0;
+      border-radius: 0;
+    }
+    .stage-row.active .stage-dot {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .stage-row.complete .stage-dot {
+      background: var(--ink);
+      border-color: var(--ink);
+    }
+    .stage-row.pending .stage-dot {
+      animation: stage-pulse 1.4s ease-in-out infinite;
+    }
+    @keyframes stage-pulse {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: 0.25; }
+    }
+    .stage-elapsed {
+      margin-top: 18px;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      color: var(--ink-3);
+      text-transform: uppercase;
+      min-height: 14px;
+    }
+    .stage-elapsed .elapsed-label { color: var(--ink-3); }
+    .stage-elapsed .elapsed-value { color: var(--ink-2); margin-left: 6px; }
+
+    /* =================================================================
+       RESULTS screen — the structural reading
+       ================================================================= */
+    .screen-results { padding-bottom: 32px; }
+
+    .results-container {
+      display: flex;
+      flex-direction: column;
+      gap: 36px;
+      margin-bottom: 32px;
+    }
+
+    /* Provenance panel — prepended at top of results by JS */
+    .provenance-panel {
+      background: var(--paper-2);
+      border-left: 2px solid var(--ink);
+      padding: 18px 24px;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.7;
+      color: var(--ink-2);
+    }
+    .provenance-panel .pv-row {
+      display: flex;
+      gap: 16px;
+    }
+    .provenance-panel .pv-key {
+      color: var(--ink-3);
+      min-width: 140px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-size: 10px;
+    }
+    .provenance-panel .pv-val { color: var(--ink); }
+
+    /* Plain register — top-of-result finding block
+       (finding first, deep structure collapsed below) */
+    .plain-top-block {
+      border: 1px solid var(--rule);
+      padding: 28px 30px;
+      background: var(--paper);
+    }
+    .plain-top-block .ptb-kicker {
+      font-family: var(--sans);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--rule-soft);
+      margin-bottom: 20px;
+    }
+    .plain-field {
+      padding: 14px 0;
+      border-bottom: 1px solid var(--rule-soft);
+    }
+    .plain-field:last-child { border-bottom: none; }
+    .plain-field-label {
+      font-family: var(--sans);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-2);
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .plain-field-value {
+      font-family: var(--serif);
+      font-size: 16px;
+      line-height: 1.55;
+      color: var(--ink);
+    }
+    .plain-field-value.is-state {
+      font-family: var(--mono);
+      font-size: 14px;
+      color: var(--ink);
+    }
+    .plain-field-value.is-muted {
+      color: var(--ink-3);
+      font-style: italic;
+    }
+
+    /* Expandable "why" section — collapses institutional/deep structure */
+    .plain-why {
+      border-top: 1px solid var(--rule-soft);
+      padding-top: 22px;
+      margin-top: 4px;
+    }
+    .plain-why-toggle {
+      all: unset;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--sans);
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--ink-2);
+      padding: 6px 0;
+    }
+    .plain-why-toggle:hover { color: var(--accent); }
+    .plain-why-toggle .ptw-caret {
+      font-family: var(--mono);
+      font-size: 12px;
+      transition: transform 0.2s ease;
+      display: inline-block;
+    }
+    .plain-why.is-open .ptw-caret { transform: rotate(90deg); }
+    .plain-why-content {
+      display: none;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--rule-soft);
+      flex-direction: column;
+      gap: 36px;
+    }
+    .plain-why.is-open .plain-why-content { display: flex; }
+    .plain-why-caption {
+      font-family: var(--serif);
+      font-size: 13px;
+      color: var(--ink-3);
+      font-style: italic;
+      margin-bottom: 14px;
+      line-height: 1.55;
+    }
+
+    /* Plain-register invariance translation */
+    .plain-consistency-card {
+      border: 1px solid var(--rule-soft);
+      padding: 18px 22px;
+      background: var(--paper-2);
+    }
+    .plain-consistency-card.is-weak { border-color: var(--flag); }
+    .plain-consistency-header {
+      font-family: var(--sans);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-2);
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .plain-consistency-status {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--ink);
+      margin-bottom: 10px;
+    }
+    .plain-consistency-status.is-weak { color: var(--flag); }
+    .plain-consistency-interp {
+      font-family: var(--serif);
+      font-size: 14px;
+      line-height: 1.55;
+      color: var(--ink);
+    }
+    .plain-consistency-details-toggle {
+      all: unset;
+      cursor: pointer;
+      font-family: var(--sans);
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-top: 12px;
+      display: inline-block;
+      padding: 4px 0;
+    }
+    .plain-consistency-details-toggle:hover { color: var(--accent); }
+    .plain-consistency-details {
+      display: none;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--rule-soft);
+    }
+    .plain-consistency-card.is-details-open .plain-consistency-details { display: block; }
+
+    /* Result cards — now numbered § sections with rules */
+    .result-card {
+      padding: 0;
+      border: none;
+      background: transparent;
+      border-radius: 0;
+    }
+    .result-card.hidden { display: none; }
+
+    .card-label {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--ink);
+      margin-bottom: 16px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--rule-soft);
+    }
+    .card-label::before {
+      content: counter(section-counter, decimal) ".";
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--ink-3);
+      letter-spacing: 0.04em;
+      counter-increment: section-counter;
+    }
+    .results-container { counter-reset: section-counter 0; }
+
+    .section-badge {
+      display: inline-block;
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 0;
+      border: 1px solid var(--rule-soft);
+      background: transparent;
+      color: var(--ink-3);
+      font-weight: 500;
+      margin-left: auto;
+    }
+    .badge-non-indexical {
+      border-color: var(--ink-2);
+      color: var(--ink-2);
+    }
+    .badge-illustrative {
+      border-color: var(--rule-soft);
+      color: var(--ink-3);
+      font-style: italic;
+    }
+
+    .card-content {
+      font-family: var(--serif);
+      font-size: 16px;
+      line-height: 1.7;
+      color: var(--ink);
+    }
+    .card-content p { margin-bottom: 14px; }
+    .card-content p:last-child { margin-bottom: 0; }
+    .card-content strong { color: var(--ink); font-weight: 600; }
+    .card-content em { color: var(--ink-2); font-style: italic; }
+    .card-content ul {
+      list-style: none;
+      padding: 0;
+      margin: 12px 0;
+    }
+    .card-content li {
+      margin-bottom: 8px;
+      padding-left: 20px;
+      position: relative;
+    }
+    .card-content li::before {
+      content: "—";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-family: var(--mono);
+    }
+
+    /* Coherence signature — tabular institutional */
+    .coherence-signature {
+      border: 1px solid var(--rule-soft);
+    }
+    .signature-item {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      align-items: baseline;
+      padding: 12px 18px;
+      border-top: 1px solid var(--rule-soft);
+      font-size: 14px;
+    }
+    .signature-item:first-child { border-top: none; }
+    .signature-label {
+      font-family: var(--sans);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--ink-2);
+      font-weight: 500;
+    }
+    .signature-value {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--ink);
+      font-weight: 400;
+    }
+    /* Collapse all category colors to neutral ink — institutional register
+       preserves the non-valence intent typographically, not chromatically.
+       JS still emits these classes; CSS keeps them monochrome. */
+    .signature-value.cat-l,
+    .signature-value.cat-f,
+    .signature-value.cat-relational,
+    .signature-value.cat-structural { color: var(--ink); }
+    .signature-value.cat-uncertain {
+      color: var(--ink-3);
+      font-style: italic;
+    }
+
+    /* Invariance stamp card */
+    .invariance-stamp-card {
+      margin-top: 0;
+      padding: 22px 26px;
+      border: 1px solid var(--rule);
+      border-radius: 0;
+      background: var(--paper);
+    }
+    .invariance-stamp-card .card-label {
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--rule-soft);
+      margin-bottom: 14px;
+    }
+    .invariance-stamp-card .card-label::before { content: ""; }
+    .invariance-content { font-size: 13px; color: var(--ink-2); }
+    .invariance-content .inv-row {
+      display: flex;
+      gap: 16px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--rule-soft);
+    }
+    .invariance-content .inv-row:last-child { border-bottom: none; }
+    .invariance-content .inv-key {
+      flex: 0 0 180px;
+      color: var(--ink-3);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .invariance-content .inv-val {
+      flex: 1;
+      color: var(--ink);
+      font-family: var(--serif);
+      word-break: break-word;
+    }
+    .invariance-content code {
+      font-family: var(--mono);
+      background: var(--paper-2);
+      padding: 1px 6px;
+      border-radius: 0;
+      font-size: 12px;
+      color: var(--ink);
+    }
+
+    /* Tri-state invariance — collapsed to typographic distinction +
+       thin rule weight, not valence color. The state is still semantically
+       present via the badge text label. */
+    .invariance-stamp-card.inv-stable    { border-color: var(--ink); }
+    .invariance-stamp-card.inv-unstable  { border-color: var(--flag); }
+    .invariance-stamp-card.inv-unavailable {
+      border-color: var(--rule-soft);
+      background: var(--paper-2);
+    }
+
+    .inv-badge {
+      display: inline-block;
+      font-family: var(--sans);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 2px 10px;
+      border-radius: 0;
+      margin-right: 10px;
+    }
+    .inv-badge.inv-stable {
+      background: var(--ink);
+      color: var(--paper);
+      border: 1px solid var(--ink);
+    }
+    .inv-badge.inv-unstable {
+      background: transparent;
+      color: var(--flag);
+      border: 1px solid var(--flag);
+    }
+    .inv-badge.inv-unavailable {
+      background: transparent;
+      color: var(--ink-3);
+      border: 1px solid var(--rule-soft);
+    }
+
+    /* Looping warning — structural warning as banner above reading (never replaces content) */
+    .looping-warning-card {
+      padding: 14px 18px;
+      background: var(--paper-2);
+      border-left: 2px solid var(--flag);
+      border-radius: 0;
+      margin-bottom: 20px;
+    }
+    .looping-warning-content {
+      font-family: var(--serif);
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--ink-2);
+      font-style: normal;
+    }
+    .looping-warning-content::before {
+      content: "STRUCTURAL WARNING — LOOPING DETECTED";
+      display: block;
+      font-family: var(--sans);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      color: var(--flag);
+      margin-bottom: 6px;
+      font-style: normal;
+    }
+
+    /* Plain-register unknowns list — surfaces U1/U2 definitions inline at the top */
+    .plain-unknowns {
+      margin-top: 8px;
+      padding: 12px 14px;
+      background: var(--paper-2);
+      border-left: 2px solid var(--rule-soft);
+    }
+    .plain-unknowns-label {
+      font-family: var(--sans);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-bottom: 8px;
+    }
+    .plain-unknowns ul {
+      margin: 0;
+      padding: 0 0 0 18px;
+      font-family: var(--serif);
+      font-size: 14px;
+      line-height: 1.55;
+      color: var(--ink-2);
+    }
+    .plain-unknowns ul li { margin-bottom: 4px; }
+    .plain-unknowns ul li:last-child { margin-bottom: 0; }
+    .plain-unknowns .u-key {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--ink-1);
+      margin-right: 6px;
+    }
+
+    /* Kernel footer — provenance */
+    .kernel-footer {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--ink-3);
+      margin-top: 32px;
+      padding: 20px 0 12px;
+      border-top: 1px solid var(--rule);
+      line-height: 1.7;
+      letter-spacing: 0.02em;
+    }
+    .disclaimer-footer {
+      font-family: var(--sans);
+      font-size: 12px;
+      color: var(--ink-3);
+      padding: 8px 0 20px;
+      font-style: italic;
+    }
+
+    /* Safety override panel */
+    .crisis-card {
+      background: var(--paper);
+      border: 2px solid var(--flag);
+      border-radius: 0;
+      padding: 28px 32px;
+      margin-bottom: 20px;
+    }
+    .crisis-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--flag);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      margin-bottom: 16px;
+    }
+    .crisis-title::before {
+      content: "SAFETY OVERRIDE · ";
+    }
+    .crisis-content {
+      font-family: var(--serif);
+      font-size: 16px;
+      line-height: 1.65;
+      color: var(--ink);
+    }
+
+    /* =================================================================
+       HISTORY screen — institutional ledger
+       ================================================================= */
+    .screen-history { padding-bottom: 32px; }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      border-top: 1px solid var(--rule);
+    }
+    .history-item {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--rule-soft);
+      border-radius: 0;
+      padding: 18px 4px;
+      cursor: pointer;
+      transition: background 120ms ease;
+      display: grid;
+      grid-template-columns: 140px 1fr 120px;
+      gap: 20px;
+      align-items: baseline;
+    }
+    .history-item:hover {
+      background: var(--paper-2);
+    }
+    .history-date {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--ink-2);
+      letter-spacing: 0.02em;
+    }
+    .history-preview {
+      font-family: var(--serif);
+      font-size: 15px;
+      color: var(--ink);
+      line-height: 1.5;
+    }
+    .history-tag {
+      display: inline-block;
+      justify-self: end;
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--ink-2);
+      background: transparent;
+      padding: 2px 10px;
+      border: 1px solid var(--rule-soft);
+      border-radius: 0;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .history-empty {
+      text-align: left;
+      padding: 32px 0;
+      color: var(--ink-3);
+      font-style: italic;
+      font-family: var(--serif);
+    }
+
+    /* History modal */
+    .history-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(14, 21, 36, 0.55);
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 48px 24px;
+      z-index: 1000;
+      overflow-y: auto;
+    }
+    .history-modal {
+      background: var(--paper);
+      border: none;
+      border-top: 3px solid var(--ink);
+      border-radius: 0;
+      max-width: 760px;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+    .history-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 28px 36px 16px;
+      border-bottom: 1px solid var(--rule-soft);
+      position: sticky;
+      top: 0;
+      background: var(--paper);
+    }
+    .history-modal-header h2 {
+      font-family: var(--serif);
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--ink);
+      margin: 0;
+    }
+    .history-modal-close {
+      background: none;
+      border: none;
+      color: var(--ink-2);
+      font-family: var(--sans);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      padding: 6px 0;
+      transition: color 120ms ease;
+    }
+    .history-modal-close:hover { color: var(--ink); }
+
+    .history-modal-content {
+      padding: 24px 36px 36px;
+    }
+    .history-detail-section { margin-bottom: 28px; }
+    .history-detail-label {
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--ink-2);
+      margin-bottom: 10px;
+    }
+    .history-detail-text {
+      font-family: var(--serif);
+      font-size: 15px;
+      line-height: 1.65;
+      color: var(--ink);
+    }
+    .history-detail-text p { margin-bottom: 12px; }
+    .history-detail-meta {
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid var(--rule-soft);
+    }
+    .history-detail-date {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--ink-3);
+    }
+
+    /* =================================================================
+       ABOUT / Transparency screen
+       ================================================================= */
+    .screen-about { padding-bottom: 32px; }
+
+    .about-content {
+      background: transparent;
+      border: none;
+      padding: 0;
+      line-height: 1.65;
+      color: var(--ink);
+    }
+    .about-content h2 {
+      font-family: var(--serif);
+      font-size: 26px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: var(--ink);
+      letter-spacing: -0.005em;
+    }
+    .about-content h3 {
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--ink-2);
+      margin-top: 36px;
+      margin-bottom: 16px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--rule-soft);
+    }
+    .about-content h3:first-of-type { margin-top: 0; }
+    .about-content p {
+      font-family: var(--serif);
+      font-size: 16px;
+      line-height: 1.65;
+      margin-bottom: 16px;
+      max-width: var(--col);
+    }
+
+    .transparency-section { margin-bottom: 32px; }
+    .transparency-card {
+      background: transparent;
+      border: none;
+      border-left: 2px solid var(--rule-soft);
+      border-radius: 0;
+      padding: 4px 0 16px 20px;
+      margin-bottom: 18px;
+      max-width: var(--col);
+    }
+    .transparency-card:hover {
+      border-left-color: var(--accent);
+    }
+    .transparency-label {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: none;
+      letter-spacing: 0;
+      color: var(--ink);
+      margin-bottom: 8px;
+      display: block;
+    }
+    .transparency-card p {
+      font-family: var(--serif);
+      font-size: 15px;
+      line-height: 1.65;
+      color: var(--ink-2);
+      margin: 0;
+    }
+    .invariants-list, .not-do-list, .research-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .invariants-list li, .not-do-list li, .research-list li {
+      font-family: var(--serif);
+      font-size: 15px;
+      line-height: 1.65;
+      color: var(--ink-2);
+      margin-bottom: 10px;
+      padding-left: 18px;
+      position: relative;
+    }
+    .invariants-list li::before,
+    .not-do-list li::before,
+    .research-list li::before {
+      content: "—";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-family: var(--mono);
+    }
+    .invariants-list li strong { color: var(--ink); font-weight: 600; }
+    .research-list { margin-top: 14px; }
+
+    .research-link {
+      color: var(--accent);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      border-bottom: none;
+    }
+    .research-link:hover { color: var(--ink); }
+
+    /* =================================================================
+       TAB BAR — institutional footer nav
+       ================================================================= */
+    .tab-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 52px;
+      background: var(--paper);
+      border-top: 1px solid var(--rule);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding-bottom: var(--safe-bottom);
+      z-index: 100;
+      backdrop-filter: none;
+      box-shadow: none;
+      max-width: none;
+      margin: 0;
+      border-radius: 0;
+    }
+    .tab-button {
+      height: 52px;
+      padding: 0 32px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      border: none;
+      background: none;
+      color: var(--ink-2);
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: color 120ms ease;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+    }
+    .tab-button:hover { color: var(--ink); }
+    .tab-button.active {
+      color: var(--ink);
+      border-bottom-color: var(--ink);
+    }
+    .tab-icon {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--ink-3);
+      letter-spacing: 0.1em;
+    }
+    .tab-button.active .tab-icon { color: var(--accent); }
+
+    /* =================================================================
+       Utility
+       ================================================================= */
+    .loading {
+      text-align: left;
+      padding: 32px 0;
+      color: var(--ink-3);
+      font-family: var(--serif);
+      font-style: italic;
+    }
+    .error-message {
+      background: var(--paper-2);
+      border-left: 2px solid var(--flag);
+      border-radius: 0;
+      padding: 14px 18px;
+      color: var(--flag);
+      font-family: var(--sans);
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+
+    /* =================================================================
+       Responsive
+       ================================================================= */
+    @media (max-width: 760px) {
+      .container { padding: 0 24px; }
+      .onboarding-form { grid-template-columns: 1fr; gap: 22px; }
+      .app-title { font-size: 30px; }
+      .history-item { grid-template-columns: 1fr; gap: 8px; }
+      .history-tag { justify-self: start; }
+      .signature-item { grid-template-columns: 1fr; gap: 4px; }
+      .invariance-content .inv-row { flex-direction: column; gap: 4px; }
+      .invariance-content .inv-key { flex: none; }
+      .history-modal-content, .history-modal-header { padding-left: 20px; padding-right: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TAB BAR -->
+  <div class="tab-bar">
+    <button class="tab-button active" data-tab="main">
+      <span class="tab-icon">§</span>
+      <span>Submit</span>
+    </button>
+    <button class="tab-button" data-tab="history">
+      <span class="tab-icon">№</span>
+      <span>History</span>
+    </button>
+    <button class="tab-button" data-tab="about">
+      <span class="tab-icon">⌂</span>
+      <span>Provenance</span>
+    </button>
+  </div>
+
+  <!-- MAIN CONTAINER -->
+  <div class="container">
+
+    <!-- ONBOARDING SCREEN -->
+    <div id="onboarding" class="screen screen-onboarding active">
+      <div class="app-title-kicker">Closure-state readings for high-stakes decisions</div>
+      <h1 class="app-title">Ground</h1>
+      <p class="app-subtitle">
+        Ground issues one structural reading per submission, under a formally
+        specified kernel. No advice. No interpretation of motive. No back-and-forth.
+        Configure register and depth below; the structural finding does not change
+        with these settings — only the phrasing of how it is presented to you.
+      </p>
+
+      <form id="onboardingForm" class="onboarding-form">
+        <div class="form-section">
+          <label class="form-label">Age range</label>
+          <select id="ageRange" name="ageRange">
+            <option value="">Select</option>
+            <option value="18-24">18–24</option>
+            <option value="25-34">25–34</option>
+            <option value="35-44">35–44</option>
+            <option value="45-54">45–54</option>
+            <option value="55+">55+</option>
+          </select>
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">Country</label>
+          <select id="country" name="country">
+            <option value="">Select</option>
+            <option value="UK">United Kingdom</option>
+            <option value="US">United States</option>
+            <option value="IE">Ireland</option>
+            <option value="DE">Germany</option>
+            <option value="AU">Australia</option>
+            <option value="CA">Canada</option>
+            <option value="RO">Romania</option>
+            <option value="OTHER">Other</option>
+          </select>
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">Reflection style</label>
+          <div class="tone-chips" data-field="reflectionStyle">
+            <button type="button" class="tone-chip active" data-value="Simple">Simple</button>
+            <button type="button" class="tone-chip" data-value="Detailed">Detailed</button>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">Tone</label>
+          <div class="tone-chips" data-field="tone">
+            <button type="button" class="tone-chip active" data-value="Gentle">Gentle</button>
+            <button type="button" class="tone-chip" data-value="Direct">Direct</button>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">Emotional register</label>
+          <div class="tone-chips" data-field="emotionalRegister">
+            <button type="button" class="tone-chip active" data-value="Neutral">Neutral</button>
+            <button type="button" class="tone-chip" data-value="Emotional">Emotional</button>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">Depth</label>
+          <div class="tone-chips" data-field="depth">
+            <button type="button" class="tone-chip active" data-value="Full">Full</button>
+            <button type="button" class="tone-chip" data-value="Surface">Surface</button>
+          </div>
+        </div>
+
+        <div class="form-section" style="grid-column: 1 / -1;">
+          <label class="form-label">Reader register</label>
+          <div class="tone-chips" data-field="register">
+            <button type="button" class="tone-chip" data-value="Plain">Plain</button>
+            <button type="button" class="tone-chip active" data-value="Practitioner">Practitioner</button>
+            <button type="button" class="tone-chip" data-value="Institutional">Institutional</button>
+            <button type="button" class="tone-chip" data-value="Research">Research</button>
+          </div>
+          <div class="form-help" style="margin-top: 10px;">
+            Controls vocabulary and framework exposure only — the structural reading is the same.
+            <strong>Plain</strong>: everyday language, no framework terms.
+            <strong>Practitioner</strong>: ethicist/clinician register with light gloss.
+            <strong>Institutional</strong>: committee-ready, audit trail foregrounded.
+            <strong>Research</strong>: full technical register, provenance fully visible.
+            Load-bearing unknowns, irreversibility, and closure state are always surfaced, regardless of register.
+          </div>
+        </div>
+      </form>
+
+      <button id="beginBtn" class="btn-primary">Begin →</button>
+
+      <div class="privacy-notice">
+        <strong>Privacy.</strong> Your submissions are not retained for training.
+        History is local to this device. Every reading carries its kernel version
+        and prompt hash for auditability. Ground is reflective, not prescriptive;
+        it does not provide moral, legal, or medical advice.
+      </div>
+    </div>
+
+    <!-- MAIN SCREEN -->
+    <div id="main" class="screen screen-main">
+      <div class="app-header">
+        <div class="app-header-left">
+          <div class="app-dot"></div>
+          <div class="app-header-title">Ground</div>
+          <div class="app-header-sub">Structural readings</div>
+        </div>
+        <div class="app-header-right">
+          <button class="btn-header-link" data-nav="about">What is this reading from?</button>
+          <button class="btn-settings">Settings</button>
+        </div>
+      </div>
+
+      <p class="pre-submission-sentence">
+        Ground issues one structural reading per submission.
+        To change the result, change the facts and resubmit.
+      </p>
+
+      
+      <div class="evidence-cue">
+        <strong>Sharper evidence, sharper reading.</strong>
+        Include what happened, what is known, what is uncertain, what can still be checked, and what would change the decision.
+      </div>
+
+<div class="usage-bar">
+        <div class="usage-label">
+          <span>Daily submissions</span>
+          <span id="usageCount">0</span>
+        </div>
+        <div class="usage-bar-track">
+          <div class="usage-bar-fill" id="usageFill" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <div class="limit-card">
+        Remaining today: <strong id="remainingReflections">10</strong>
+      </div>
+
+      <div class="textarea-section">
+        <textarea id="userText" placeholder="Describe the situation. State what is at stake, who the relevant parties are, the constraints and obligations in play, and the decision you are facing. Write as much as you need — the more structure you give, the more structural the reading can be."></textarea>
+      </div>
+
+      <div class="optional-section">
+        <div class="optional-header" id="optionalToggle">
+          <span class="optional-header-label">Optional context</span>
+          <div class="optional-toggle">+</div>
+        </div>
+        <div class="optional-content" id="optionalContent">
+          <div class="optional-field-group">
+            <label class="optional-field-label">What you want <small>(optional)</small></label>
+            <textarea id="optionalWant" class="optional-textarea" placeholder="What outcome are you hoping for?"></textarea>
+          </div>
+          <div class="optional-field-group">
+            <label class="optional-field-label">What you fear <small>(optional)</small></label>
+            <textarea id="optionalFear" class="optional-textarea" placeholder="What outcome are you trying to avoid?"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="char-count">
+        <span id="charCount">0 characters</span>
+        <span id="minWarning" style="color: var(--ink-3); display: none;">Minimum 20 characters</span>
+      </div>
+
+      <button id="reflectBtn" class="btn-reflect" disabled>Submit for reading →</button>
+    </div>
+
+    <!-- PROCESSING SCREEN -->
+    <div id="processing" class="screen screen-processing">
+      <div class="processing-label">Issuing reading — kernel v0.5.6</div>
+      <div class="processing-stages">
+        <div class="stage-row active">
+          <div class="stage-dot"></div>
+          <span>Screening for safety</span>
+        </div>
+        <div class="stage-row">
+          <div class="stage-dot"></div>
+          <span>Reading structural configuration</span>
+        </div>
+        <div class="stage-row">
+          <div class="stage-dot"></div>
+          <span>Mapping L and F operators</span>
+        </div>
+        <div class="stage-row">
+          <div class="stage-dot"></div>
+          <span>Generating reflection</span>
+        </div>
+      </div>
+      <div class="stage-elapsed" id="stageElapsed" aria-live="polite"></div>
+    </div>
+
+    <!-- RESULTS SCREEN -->
+    <div id="results" class="screen screen-results">
+      <div class="app-header">
+        <div class="app-header-left">
+          <div class="app-dot"></div>
+          <div class="app-header-title">Ground</div>
+          <div class="app-header-sub">Structural reading</div>
+        </div>
+        <button class="btn-settings">Settings</button>
+      </div>
+
+      <div id="resultsContainer" class="results-container">
+        <!-- Results inserted here by JS -->
+      </div>
+
+      <div class="kernel-footer">
+        Kernel Stack: v0.5.6 (constraint-residue + L/F reader + retention/closure parse + closure-state selector + A1-A4/RMAK checks + BVG runtime + framing-as-content + Plain body discipline + spine agreement) | Policy: reflective, non-prescriptive
+      </div>
+
+      <div class="disclaimer-footer">
+        Reflective, not diagnostic. Ground does not provide moral, legal, or medical advice. To change the result, change the facts and resubmit.
+      </div>
+
+      <button id="newReflectionBtn" class="btn-new-reflection">New reading</button>
+    </div>
+
+    <!-- HISTORY SCREEN -->
+    <div id="history" class="screen screen-history">
+      <div class="app-header">
+        <div class="app-header-left">
+          <div class="app-dot"></div>
+          <div class="app-header-title">History</div>
+          <div class="app-header-sub">Local to this device</div>
+        </div>
+      </div>
+
+      <div id="historyContainer" class="history-list">
+        <!-- History items inserted here by JS -->
+      </div>
+    </div>
+
+    <!-- ABOUT / PROVENANCE SCREEN -->
+    <div id="about" class="screen screen-about">
+      <div class="app-header">
+        <div class="app-header-left">
+          <div class="app-dot"></div>
+          <div class="app-header-title">Provenance</div>
+          <div class="app-header-sub">What is this reading from?</div>
+        </div>
+      </div>
+
+      <div class="about-content">
+        <h2>What is this reading from?</h2>
+
+        <p>
+          Ground issues readings under a formally specified kernel.
+          The kernel is developed across 65 academic papers and 4 books by Sergiu Margan.
+          The architecture below is the full set of primitives Ground applies to every submission.
+        </p>
+
+        <div class="transparency-section">
+          <h3>Readers and operators</h3>
+
+          <div class="transparency-card">
+            <div class="transparency-label">L and F operators</div>
+            <p>L (Love) names actions that preserve the dignity, integrity, and non-negative externality across the people affected. F (Freedom) names actions that preserve ongoing consent, autonomy, exit options, and the ability to revise one's stance without coercion. The app reads your situation through both operators and shows where they align and where they pull apart.</p>
+          </div>
+
+          <div class="transparency-card">
+            <div class="transparency-label">Indexical vs constitutive distinction</div>
+            <p>Some aspects of a situation are indexical — specific to this moment, these people, these circumstances. Others are constitutive — they define what kind of situation this is structurally. Ground reads both layers, and its structural findings operate over the constitutive layer only.</p>
+          </div>
+        </div>
+
+        <div class="transparency-section">
+          <h3>Kernel invariants</h3>
+          <div class="transparency-card">
+            <ul class="invariants-list">
+              <li><strong>K1 — Preservation.</strong> No irreversible destruction of what matters.</li>
+              <li><strong>K2 — Non-bypassability.</strong> No routing around legitimate evaluation.</li>
+              <li><strong>K3 — Anti-erasure.</strong> No treating persons as disposable.</li>
+              <li><strong>K4 — Repair and closure.</strong> Where harm occurs, repair pathways must exist.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="transparency-section">
+          <h3>Closure-state selector</h3>
+          <div class="transparency-card">
+            <div class="transparency-label">S1 · S2 · S3 · S4</div>
+            <p>S1 — no closure available. S2 — conditional corridor (load-bearing pivot unknowns remain). S3 — canonical stabilizer, uniquely selected. S4 — false closure (flagged). S3 fires only under four joint conditions — every K-invariant positively satisfied, exactly one ΔX axis, remaining uncertainties classified as Class B/C only, no false-closure mechanism detected — and publishes watch conditions.</p>
+          </div>
+          <div class="transparency-card">
+            <div class="transparency-label">Stabilizer distinctness · ΔAUD · ΔINF · ΔGOV · ΔALT</div>
+            <p>Axes on which an S3 stabilizer must be uniquely distinct from eliminated options — audience, information, governance, alternative.</p>
+          </div>
+        </div>
+
+        <div class="transparency-section">
+          <h3>Forgiveness protocol</h3>
+          <div class="transparency-card">
+            <p>Forgiveness is not a command to tolerate harm. It becomes structurally possible only after recognition, truthful request, and a credible path to non-repetition. If recognition is absent, the relevant structural move is boundary or containment, not forced closure.</p>
+          </div>
+        </div>
+
+        <div class="transparency-section">
+          <h3>Necessity types</h3>
+          <div class="transparency-card">
+            <p>The app distinguishes between costs that are necessary as part of a coherent path (antecedent necessity) and costs that exist because of prior misexecution (consequent necessity). This changes what 'repair' can meaningfully look like.</p>
+          </div>
+        </div>
+
+        <div class="transparency-section">
+          <h3>Non-indexicality check — spine agreement</h3>
+          <div class="transparency-card">
+            <p>Every reading is stamped with a spine-agreement check: the engine re-runs the kernel analysis on paraphrased versions of your submission and verifies that the structural spine (K-invariants, closure state, unknown and stabilizer counts) converges across runs. The reading tells you whether the spine was stable, unstable, or unavailable — so you can see whether the finding is structural or partly framing-dependent.</p>
+          </div>
+        </div>
+
+        <div class="transparency-section">
+          <h3>Published research</h3>
+          <div class="transparency-card">
+            <p>Ground compiles from the Moral Kernel Optimization canon. The four papers below carry the operators surfaced on this screen; the full canon comprises 65 papers and 4 books.</p>
+            <ul class="research-list">
+              <li><a href="https://doi.org/10.5281/zenodo.17165681" class="research-link" target="_blank" rel="noopener">Moral Kernel Optimization: TRO, Simulation Theory, and the Coherence of Reality</a> — foundational specification</li>
+              <li><a href="https://doi.org/10.5281/zenodo.17314668" class="research-link" target="_blank" rel="noopener">The Kernel of Redemption: Lexicographic Life Priority and the Non-Fungibility of Suffering</a> — kernel-stack formalization</li>
+              <li><a href="https://doi.org/10.5281/zenodo.17314859" class="research-link" target="_blank" rel="noopener">The Margan Closure Theorem: Ethical Latency and the Preservation of Freedom Under Total Revelation</a> — K3 formalization</li>
+              <li><a href="https://doi.org/10.5281/zenodo.18442217" class="research-link" target="_blank" rel="noopener">A General Objective Dichotomy: On the Structural Limits of Moral Authority</a> — indexical / constitutive distinction</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="transparency-section">
+          <h3>What Ground does not do</h3>
+          <div class="transparency-card">
+            <ul class="not-do-list">
+              <li>Does not tell you what to do.</li>
+              <li>Does not rank options.</li>
+              <li>Does not assign moral scores.</li>
+              <li>Does not simulate empathy.</li>
+              <li>Does not continue the exchange — a new reading requires new facts.</li>
+              <li>Does not provide legal, medical, or therapeutic advice.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ==================== STATE ====================
+    let appState = {
+      onboarded: false,
+      profile: null,
+      currentScreen: 'onboarding',
+      usage: 0,
+      remainingReflections: 10,
+      history: [],
+      optionalExpanded: false,
+    };
+
+    const CONFIG = {
+      MIN_CHARS: 20,
+      MAX_DAILY_REFLECTIONS: 10,
+    };
+
+    // ==================== INITIALIZATION ====================
+    async function init() {
+      setupEventListeners();
+      await checkProfile();
+      updateUsageBar();
+    }
+
+
+    function normalizeProfileObject(data) {
+      if (!data) return {};
+      return data.profile || data;
+    }
+
+    function setChipActive(field, value) {
+      if (!value) return;
+      const group = document.querySelector(`[data-field="${field}"]`);
+      if (!group) return;
+      const target = String(value).toLowerCase();
+
+      group.querySelectorAll('.tone-chip').forEach(btn => {
+        const btnValue = String(btn.dataset.value || '').toLowerCase();
+        btn.classList.toggle('active', btnValue === target);
+      });
+    }
+
+    function applyProfileToControls(profile) {
+      if (!profile) return;
+
+      const ageEl = document.getElementById('ageRange');
+      const countryEl = document.getElementById('country');
+
+      if (ageEl && (profile.age_range || profile.ageRange)) ageEl.value = profile.age_range || profile.ageRange;
+      if (countryEl && profile.country) countryEl.value = profile.country;
+
+      setChipActive('reflectionStyle', profile.reflection_style || profile.reflectionStyle);
+      setChipActive('tone', profile.tone);
+      setChipActive('emotionalRegister', profile.emotional_register || profile.emotionalRegister);
+      setChipActive('depth', profile.depth);
+      setChipActive('register', profile.register || profile.readerRegister || profile.reader_register);
+    }
+
+    function currentRegisterFromStateOrControls() {
+      const profile = normalizeProfileObject(appState.profile);
+
+      const fromProfile =
+        profile.register ||
+        profile.readerRegister ||
+        profile.reader_register;
+
+      if (fromProfile) return String(fromProfile).toLowerCase();
+
+      return String(document.querySelector('[data-field="register"] .tone-chip.active')?.dataset.value || 'Practitioner').toLowerCase();
+    }
+
+    async function checkProfile() {
+      try {
+        const response = await fetch('/api/profile');
+        const data = await response.json();
+        if (data.onboarded) {
+          appState.onboarded = true;
+          appState.profile = normalizeProfileObject(data);
+          applyProfileToControls(appState.profile);
+          appState.usage = data.usage || 0;
+          appState.remainingReflections = CONFIG.MAX_DAILY_REFLECTIONS - appState.usage;
+          showScreen('main');
+          await loadHistory();
+        }
+      } catch (error) {
+        console.log('Not onboarded yet');
+      }
+    }
+
+    // ==================== SCREEN MANAGEMENT ====================
+    function showScreen(screenName) {
+      // If we're leaving the processing screen, halt the animation + elapsed counter.
+      if (appState.currentScreen === 'processing' && screenName !== 'processing') {
+        if (typeof stopProcessing === 'function') stopProcessing();
+      }
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenName).classList.add('active');
+      appState.currentScreen = screenName;
+
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+      const tabBtn = document.querySelector(`[data-tab="${screenName}"]`);
+      if (tabBtn) tabBtn.classList.add('active');
+
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+
+    // ==================== EVENT LISTENERS ====================
+    function setupEventListeners() {
+      document.querySelectorAll('.tone-chips').forEach(chipContainer => {
+        chipContainer.addEventListener('click', (e) => {
+          if (e.target.classList.contains('tone-chip')) {
+            chipContainer.querySelectorAll('.tone-chip').forEach(c => c.classList.remove('active'));
+            e.target.classList.add('active');
+          }
+        });
+      });
+
+      document.getElementById('beginBtn').addEventListener('click', handleBegin);
+
+      document.getElementById('userText').addEventListener('input', updateCharCount);
+      document.getElementById('reflectBtn').addEventListener('click', handleReflect);
+      document.getElementById('optionalToggle').addEventListener('click', toggleOptionalFields);
+      document.getElementById('newReflectionBtn').addEventListener('click', resetToMain);
+
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const tab = e.currentTarget.dataset.tab;
+          if (tab === 'history') {
+            await loadHistory();
+          }
+          showScreen(tab);
+        });
+      });
+
+      document.querySelectorAll('.btn-settings').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (appState.onboarded) {
+            showScreen('onboarding');
+          }
+        });
+      });
+
+      document.querySelectorAll('.btn-header-link').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const target = e.currentTarget.dataset.nav;
+          if (target) showScreen(target);
+        });
+      });
+    }
+
+    // ==================== ONBOARDING ====================
+    async function handleBegin() {
+      const ageRange = document.getElementById('ageRange').value;
+      const country = document.getElementById('country').value;
+      const reflectionStyle = document.querySelector('[data-field="reflectionStyle"] .tone-chip.active')?.dataset.value || 'Simple';
+      const tone = document.querySelector('[data-field="tone"] .tone-chip.active')?.dataset.value || 'Gentle';
+      const emotionalRegister = document.querySelector('[data-field="emotionalRegister"] .tone-chip.active')?.dataset.value || 'Neutral';
+      const depth = document.querySelector('[data-field="depth"] .tone-chip.active')?.dataset.value || 'Full';
+      const register = (document.querySelector('[data-field="register"] .tone-chip.active')?.dataset.value || 'Practitioner').toLowerCase();
+
+      if (!ageRange || !country) {
+        alert('Please fill in all required fields');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ageRange, country, reflectionStyle, tone, emotionalRegister, depth, register,
+          }),
+        });
+        const data = await response.json();
+        appState.onboarded = true;
+        appState.profile = data;
+        showScreen('main');
+      } catch (error) {
+        console.error('Onboarding error:', error);
+        alert('Error completing onboarding. Please try again.');
+      }
+    }
+
+    // ==================== OPTIONAL FIELDS ====================
+    function toggleOptionalFields() {
+      appState.optionalExpanded = !appState.optionalExpanded;
+      const content = document.getElementById('optionalContent');
+      const toggle = document.querySelector('.optional-toggle');
+      content.classList.toggle('active');
+      toggle.textContent = appState.optionalExpanded ? '−' : '+';
+    }
+
+    // ==================== CHARACTER COUNT ====================
+    function updateCharCount() {
+      const text = document.getElementById('userText').value;
+      const count = text.length;
+      document.getElementById('charCount').textContent = `${count} characters`;
+
+      const reflectBtn = document.getElementById('reflectBtn');
+      const minWarning = document.getElementById('minWarning');
+
+      if (count >= CONFIG.MIN_CHARS) {
+        reflectBtn.disabled = false;
+        minWarning.style.display = 'none';
+      } else {
+        reflectBtn.disabled = true;
+        minWarning.style.display = 'inline';
+      }
+    }
+
+    // ==================== REFLECT / SUBMIT ====================
+    async function handleReflect() {
+      const userText = document.getElementById('userText').value;
+      const optionalWant = document.getElementById('optionalWant').value;
+      const optionalFear = document.getElementById('optionalFear').value;
+
+      if (userText.length < CONFIG.MIN_CHARS) {
+        alert('Please enter at least 20 characters');
+        return;
+      }
+      if (appState.remainingReflections <= 0) {
+        alert('You have reached your daily submission limit.');
+        return;
+      }
+
+      showScreen('processing');
+      animateProcessing();
+
+      try {
+        const response = await fetch('/api/reflect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_text: userText,
+            optional_want: optionalWant,
+            optional_fear: optionalFear,
+            register: currentRegisterFromStateOrControls(),
+            profile: normalizeProfileObject(appState.profile),
+          }),
+        });
+        const data = await response.json();
+        console.log('[Ground] Raw response_text (first 500):', data.response_text?.substring(0, 500));
+
+        if (!data.success) {
+          console.error('[Ground] API error:', data);
+          alert(data.error || 'Error processing submission. Please try again.');
+          showScreen('main');
+          return;
+        }
+
+        if (data.safety_triggered) {
+          renderSafetyResult(data.response_text);
+        } else {
+          parseAndRenderResults(data.response_text, data.looping_warning, data.invariance);
+        }
+
+        appState.usage += 1;
+        appState.remainingReflections = CONFIG.MAX_DAILY_REFLECTIONS - appState.usage;
+        updateUsageBar();
+        await loadHistory();
+        showScreen('results');
+      } catch (error) {
+        console.error('Submission error:', error);
+        alert('Error processing submission. Please try again.');
+        showScreen('main');
+      }
+    }
+
+    // ==================== PROCESSING ANIMATION ====================
+    // Handles: stages advance, final stage holds in pulsing "pending" state,
+    // and an elapsed-time counter ticks so the user knows work is in flight.
+    let _processingState = null;
+    function animateProcessing() {
+      stopProcessing();
+      const stages = Array.from(document.querySelectorAll('.stage-row'));
+      const elapsedEl = document.getElementById('stageElapsed');
+      stages.forEach(s => s.classList.remove('active', 'complete', 'pending'));
+      if (elapsedEl) elapsedEl.innerHTML = '';
+
+      const stageTimings = [1200, 1400, 1400]; // ms for stages 1, 2, 3
+      let currentStage = 0;
+      stages[0].classList.add('active');
+
+      const advance = () => {
+        if (currentStage < stages.length - 1) {
+          stages[currentStage].classList.remove('active');
+          stages[currentStage].classList.add('complete');
+          currentStage++;
+          stages[currentStage].classList.add('active');
+          if (currentStage < stages.length - 1) {
+            _processingState.advanceTimer = setTimeout(advance, stageTimings[currentStage]);
+          } else {
+            // Final stage — hold indefinitely with a pulse until results arrive.
+            stages[currentStage].classList.add('pending');
+            startElapsedCounter(elapsedEl);
+          }
+        }
+      };
+
+      _processingState = {
+        advanceTimer: setTimeout(advance, stageTimings[0]),
+        elapsedTimer: null,
+        startTs: Date.now(),
+      };
+    }
+
+    function startElapsedCounter(el) {
+      if (!el || !_processingState) return;
+      const startTs = _processingState.startTs;
+      const render = () => {
+        const seconds = Math.floor((Date.now() - startTs) / 1000);
+        const mm = String(Math.floor(seconds / 60)).padStart(1, '0');
+        const ss = String(seconds % 60).padStart(2, '0');
+        const note = seconds < 20
+          ? 'Elapsed'
+          : seconds < 50
+          ? 'Elapsed · still issuing'
+          : 'Elapsed · long submissions may take up to 90 seconds';
+        el.innerHTML = '<span class="elapsed-label">' + note + '</span>'
+                     + '<span class="elapsed-value">' + mm + ':' + ss + '</span>';
+      };
+      render();
+      _processingState.elapsedTimer = setInterval(render, 1000);
+    }
+
+    function stopProcessing() {
+      if (!_processingState) return;
+      if (_processingState.advanceTimer) clearTimeout(_processingState.advanceTimer);
+      if (_processingState.elapsedTimer) clearInterval(_processingState.elapsedTimer);
+      _processingState = null;
+      // Mark any in-flight stages as complete so a later screen switch looks clean.
+      const stages = document.querySelectorAll('.stage-row');
+      stages.forEach(s => {
+        s.classList.remove('active', 'pending');
+        s.classList.add('complete');
+      });
+    }
+
+    // ==================== RESULT PARSING ====================
+    function parseAndRenderResults(responseText, loopingWarning, invariance) {
+      const sections = [];
+      const sectionConfig = [
+        { key: 'kernel core residue',   label: 'Kernel core residue',   badge: 'NON-INDEXICAL' },
+        { key: 'elimination result',    label: 'Elimination result',    badge: 'NON-INDEXICAL' },
+        { key: 'contextual l and f',    label: 'Contextual L and F map', badge: 'ILLUSTRATIVE' },
+        { key: 'coherence signature',   label: 'Coherence signature',   badge: null },
+      ];
+      const sectionKeywords = sectionConfig.map(c => c.key);
+
+      const lines = responseText.split('\n');
+      let currentSection = null;
+      let currentContent = [];
+
+      function detectSectionHeading(line) {
+        const trimmed = line.trim();
+        let cleaned = trimmed
+          .replace(/^#{1,3}\s+/, '')
+          .replace(/^\d+\.\s*/, '')
+          .replace(/^\*\*/, '')
+          .replace(/\*\*$/, '')
+          .replace(/^Section\s+\d+:\s*/i, '')
+          .trim();
+        if (cleaned && sectionKeywords.some(kw => cleaned.toLowerCase().includes(kw))) {
+          return cleaned;
+        }
+        return null;
+      }
+
+      for (const line of lines) {
+        const heading = detectSectionHeading(line);
+        if (heading && sectionKeywords.some(kw => heading.toLowerCase().includes(kw))) {
+          if (currentSection) {
+            sections.push({
+              heading: currentSection,
+              content: currentContent.join('\n').trim(),
+            });
+          }
+          currentSection = heading;
+          currentContent = [];
+        } else if (currentSection) {
+          currentContent.push(line);
+        }
+      }
+      if (currentSection) {
+        sections.push({
+          heading: currentSection,
+          content: currentContent.join('\n').trim(),
+        });
+      }
+
+      const container = document.getElementById('resultsContainer');
+      container.innerHTML = '';
+
+      // Resolve register for this render.
+      // v0.5.8d: prefer explicit Register marker in the model response when present.
+      // This prevents stale appState.profile from showing Practitioner while the body is Plain.
+      const bodyRegisterMatch = responseText.match(/^\s*Register\s*:\s*(Plain|Practitioner|Institutional|Research)\.?\s*$/im);
+      const profileRegisterRaw = (appState.profile && appState.profile.register) || 'practitioner';
+      const registerRaw = bodyRegisterMatch ? bodyRegisterMatch[1] : profileRegisterRaw;
+      const register = String(registerRaw).toLowerCase();
+      const registerDisplay = register.charAt(0).toUpperCase() + register.slice(1);
+      const isPlain = register === 'plain';
+
+      // Looping warning — render as banner at the TOP of results, never replacing content.
+      // Institutional and Research registers suppress the warning entirely (these are
+      // disciplined iterative registers where repeated structured submission is the norm).
+      const showLoopingWarning = loopingWarning && (register === 'plain' || register === 'practitioner');
+      if (showLoopingWarning) {
+        const warningCard = document.createElement('div');
+        warningCard.className = 'looping-warning-card';
+        warningCard.innerHTML = `<div class="looping-warning-content">${loopingWarning}</div>`;
+        container.appendChild(warningCard);
+      }
+
+      // Provenance panel — now includes Register row
+      const provenance = document.createElement('div');
+      provenance.className = 'provenance-panel';
+      const invHash = (invariance && (invariance.hash || invariance.spine_hash)) || '';
+      const invHashShort = invHash ? (invHash.slice(0, 10) + '…' + invHash.slice(-4)) : '—';
+      provenance.innerHTML = `
+        <div class="pv-row"><span class="pv-key">Kernel version</span><span class="pv-val">v0.5.6</span></div>
+        <div class="pv-row"><span class="pv-key">Architecture</span><span class="pv-val">constraint-residue + closure-state + stabilizer-distinctness + watch-condition discipline + constraint naming convention</span></div>
+        <div class="pv-row"><span class="pv-key">Core hash</span><span class="pv-val">${escapeHtml(invHashShort)}</span></div>
+        <div class="pv-row"><span class="pv-key">Register</span><span class="pv-val">${escapeHtml(registerDisplay)}</span></div>
+        <div class="pv-row"><span class="pv-key">Invariants</span><span class="pv-val">K1 · K2 · K3 · K4</span></div>
+        <div class="pv-row"><span class="pv-key">Policy</span><span class="pv-val">reflective · non-prescriptive · single-exchange</span></div>
+      `;
+      container.appendChild(provenance);
+
+      // ── PLAIN REGISTER: finding-first top block + expandable deep-dive ──
+      if (isPlain) {
+        const elimSection = sections.find(s => s.heading.toLowerCase().includes('elimination result'));
+        const kernelSection = sections.find(s => s.heading.toLowerCase().includes('kernel core residue'));
+
+        // v0.5.8f: robust Plain extraction.
+        // Prefer Elimination Result, but fall back to kernel content and then the whole response.
+        // This prevents an empty “Current finding” card when the model phrases the Plain result
+        // differently or the section parser fails to isolate the expected heading.
+        const plainSource = [
+          elimSection?.content || '',
+          kernelSection?.content || '',
+          responseText || ''
+        ].filter(Boolean).join('\n\n');
+
+        const extracted = extractPlainTopFields(plainSource);
+
+        const spine =
+          (invariance && (invariance.original_spine || invariance.spine || invariance.originalSpine)) ||
+          null;
+
+        const closureCode = spine && spine.closure_state;
+        const closureFallbackMap = {
+          S1: 'S1 — Not enough structure for a safe path.',
+          S2: 'S2 — A conditional path exists, but the answer is not settled yet.',
+          S3: 'S3 — A settled path exists under the stated conditions.',
+          S4: 'S4 — False closure pressure is present.'
+        };
+
+        const hasTopFields =
+          extracted.closureState ||
+          extracted.finalRecommendation ||
+          extracted.nextStep ||
+          extracted.reason ||
+          extracted.watchConditions ||
+          extracted.optionC;
+
+        // v0.5.8h: treat partial Plain summaries as incomplete.
+        // A useful Plain top card must include at least closure state + Ground finding.
+        // If only "next step" or one fragment is extracted, show the full reading too.
+        const plainExtractionFailed = !hasTopFields;
+        const plainTopIncomplete = !extracted.closureState || !extracted.finalRecommendation;
+
+        if (plainExtractionFailed) {
+          extracted.closureStateCode = closureCode || '';
+          extracted.closureState = closureFallbackMap[closureCode] || 'Ground returned a structural reading.';
+          extracted.finalRecommendation =
+            'Ground returned a structural reading, but the compact Plain summary could not be extracted. Open “Why Ground reached this reading” below to view the full structure.';
+          extracted.nextStep =
+            'Use the detailed reading below; the compact summary extractor did not find the expected Plain fields.';
+        } else if (!extracted.closureState && closureCode) {
+          extracted.closureStateCode = closureCode;
+          extracted.closureState = closureFallbackMap[closureCode] || closureCode;
+        }
+
+        // Surface unknowns list (U1, U2, …) inline so top-block symbol references resolve
+        // without needing to expand the deep-dive.
+        const unknowns = extractUnknownsFromSections(
+          kernelSection?.content || plainSource,
+          elimSection?.content || plainSource
+        );
+
+        renderPlainTopBlock(container, extracted, unknowns);
+
+        // v0.5.8g/h: if compact Plain extraction fails or is materially incomplete,
+        // show the full model reading immediately so Plain mode never hides the useful result.
+        if (plainExtractionFailed || plainTopIncomplete) {
+          const rawCard = document.createElement('div');
+          rawCard.className = 'result-card';
+          rawCard.innerHTML = `
+            <div class="card-label">Full structural reading</div>
+            <div class="card-content">${escapeHtml(responseText).replace(/\n/g, '<br>')}</div>
+          `;
+          container.appendChild(rawCard);
+        }
+
+        renderPlainWhyExpandable(container, sections, sectionConfig, invariance);
+        return;
+      }
+
+      // ── NON-PLAIN (Practitioner / Institutional / Research): existing render ──
+      sectionConfig.forEach((cfg) => {
+        const section = sections.find(s => s.heading.toLowerCase().includes(cfg.key));
+        const card = document.createElement('div');
+        card.className = 'result-card';
+        const badgeHtml = cfg.badge
+          ? `<span class="section-badge badge-${cfg.badge === 'NON-INDEXICAL' ? 'non-indexical' : 'illustrative'}">${cfg.badge}</span>`
+          : '';
+
+        if (cfg.key === 'coherence signature') {
+          card.innerHTML = `
+            <div class="card-label">${cfg.label} ${badgeHtml}</div>
+            <div class="coherence-signature" id="coherenceSignature">
+              ${renderCoherenceSignature(section?.content || '')}
+            </div>
+          `;
+        } else {
+          card.innerHTML = `
+            <div class="card-label">${cfg.label} ${badgeHtml}</div>
+            <div class="card-content">
+              ${markdownToHtml(section?.content || '')}
+            </div>
+          `;
+        }
+        container.appendChild(card);
+      });
+
+      if (invariance) {
+        const stampCard = document.createElement('div');
+        stampCard.className = 'invariance-stamp-card';
+        let status = invariance.status || 'unavailable';
+
+        const statusConfig = {
+          stable:      { label: 'Spine converged across paraphrase runs', badge: 'STABLE',      cls: 'inv-stable' },
+          unstable:    { label: 'Spine drifted under reframing',          badge: 'UNSTABLE',    cls: 'inv-unstable' },
+          unavailable: { label: 'Spine agreement unavailable (non-signal)', badge: 'UNAVAILABLE', cls: 'inv-unavailable' },
+        };
+        const scfg = statusConfig[status] || statusConfig.unavailable;
+        stampCard.classList.add(scfg.cls);
+
+        const originalSpine = invariance.original_spine || null;
+        const rows = [];
+
+        rows.push(`<div class="inv-row"><span class="inv-key">Status</span><span class="inv-val"><span class="inv-badge ${scfg.cls}">${scfg.badge}</span> ${escapeHtml(scfg.label)}</span></div>`);
+        if (invariance.spine_hash) {
+          rows.push(`<div class="inv-row"><span class="inv-key">Spine hash</span><span class="inv-val"><code>${escapeHtml(invariance.spine_hash)}</code></span></div>`);
+        }
+        if (invariance.hash) {
+          rows.push(`<div class="inv-row"><span class="inv-key">Core hash</span><span class="inv-val"><code>${escapeHtml(invariance.hash)}</code></span></div>`);
+        }
+        if (typeof invariance.agreement_count === 'number' && typeof invariance.valid_run_count === 'number') {
+          const quorum = invariance.stable_quorum || 3;
+          rows.push(`<div class="inv-row"><span class="inv-key">Agreement</span><span class="inv-val">${invariance.agreement_count} / ${invariance.valid_run_count} spines converged (quorum: ${quorum})</span></div>`);
+        }
+        if (originalSpine) {
+          const kTypes = Array.isArray(originalSpine.k_types) ? originalSpine.k_types : [];
+          const stabLabels = Array.isArray(originalSpine.stabilizer_labels) ? originalSpine.stabilizer_labels : [];
+          const spineBits = [];
+          if (kTypes.length) spineBits.push(`K-invariants: <code>${kTypes.map(escapeHtml).join(', ')}</code>`);
+          if (typeof originalSpine.unknown_count === 'number') spineBits.push(`unknowns: ${originalSpine.unknown_count}`);
+          if (typeof originalSpine.stabilizer_count === 'number') {
+            const labelSuffix = stabLabels.length ? ` (${stabLabels.map(l => 'Δ' + escapeHtml(l)).join(', ')})` : '';
+            spineBits.push(`stabilizers: ${originalSpine.stabilizer_count}${labelSuffix}`);
+          }
+          if (originalSpine.closure_state) spineBits.push(`closure: <code>${escapeHtml(originalSpine.closure_state)}</code>`);
+          if (spineBits.length) {
+            rows.push(`<div class="inv-row"><span class="inv-key">Spine</span><span class="inv-val">${spineBits.join(' · ')}</span></div>`);
+          }
+        }
+        const note = invariance.note || invariance.error;
+        if (note) {
+          rows.push(`<div class="inv-row"><span class="inv-key">Note</span><span class="inv-val">${escapeHtml(note)}</span></div>`);
+        }
+        if (invariance.failure_reason && invariance.failure_reason !== 'ok') {
+          rows.push(`<div class="inv-row"><span class="inv-key">Failure mode</span><span class="inv-val"><code>${escapeHtml(invariance.failure_reason)}</code></span></div>`);
+        }
+
+        let interp = null;
+        if (status === 'stable') {
+          interp = 'The kernel spine (K-invariants, closure state, unknown/stabilizer counts) reproduced under paraphrase. The reading above is structural, not framing-dependent.';
+        } else if (status === 'unstable') {
+          interp = 'The kernel spine changed under reframing — a different K-composition, closure state, or structural shape emerged. The reading above may be partly indexical.';
+        } else if (status === 'unavailable') {
+          interp = 'The spine-agreement ensemble did not produce a usable signal — not a red flag on the reading, just a gap in the check.';
+        }
+        if (interp) {
+          rows.push(`<div class="inv-row"><span class="inv-key">Interpretation</span><span class="inv-val">${escapeHtml(interp)}</span></div>`);
+        }
+
+        stampCard.innerHTML = `
+          <div class="card-label">Non-indexicality check · spine agreement</div>
+          <div class="card-content invariance-content">${rows.join('')}</div>
+        `;
+        container.appendChild(stampCard);
+      }
+    }
+
+    // ── PLAIN-REGISTER HELPERS ────────────────────────────────────────────
+    // Extract the finding-line fields from the "Elimination result" section text.
+    // v0.5.9b: hardened Plain compact extraction.
+    // Handles Markdown labels with colon inside bold, e.g. **Final reading:**
+    // as well as **Final reading**: and plain Final reading:
+    function extractPlainTopFields(elimContent) {
+      const fields = {
+        closureState: '',
+        closureStateCode: '',
+        optionC: '',
+        reason: '',
+        nextStep: '',
+        watchConditions: '',
+        finalRecommendation: '',
+      };
+
+      let text = String(elimContent || '');
+
+      // v0.5.9d: normalize Markdown-bold labels before extraction.
+      // The model often emits labels as:
+      //   **Closure status:** value
+      //   **Final reading:** value
+      // while earlier extraction expected:
+      //   Closure status: value
+      // This normalization makes the compact Plain extractor tolerant of both.
+      text = text
+        .replace(/\*\*([^*\n]{2,90}):\*\*/g, '$1:')
+        .replace(/\*\*([^*\n]{2,90})\*\*\s*:/g, '$1:')
+        .replace(/^\s*[-*]\s+\*\*([^*\n]{2,90}):\*\*/gm, '$1:')
+        .replace(/^\s*[-*]\s+\*\*([^*\n]{2,90})\*\*\s*:/gm, '$1:');
+
+      if (!text.trim()) return fields;
+
+      const allLabels = [
+        'Closure status',
+        'Closure state',
+        'Current configuration',
+        'Current situation reading',
+        'Current path status',
+        'Route status',
+        'Final closure',
+        'Limited corridor',
+        'Canonical closure',
+        'Reason',
+        'Next step',
+        'Watch conditions',
+        'Final recommendation',
+        'Final reading',
+        'Option C',
+        'What Ground finds',
+        'What must be resolved',
+        'What must be watched',
+      ];
+
+      function esc(s) {
+        return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      }
+
+      function labelPattern(label) {
+        const base = esc(label).replace(/\\ /g, '\\s+');
+        if (label === 'Closure status' || label === 'Closure state') {
+          return base + '(?:\\s*\\([^)]*\\))?';
+        }
+        return base;
+      }
+
+      const stopAlt = allLabels.map(labelPattern).join('|');
+
+      // Accept all common label forms:
+      // Label: value
+      // **Label**: value
+      // **Label:** value
+      // - **Label:** value
+      function labelledFieldRegex(label) {
+        const lp = labelPattern(label);
+        const delimiter = String.raw`(?:\s*[:\-]\s*(?:\*\*)?|\s*(?:\*\*)?\s*[:\-]\s*)`;
+        const stopDelimiter = delimiter;
+        return new RegExp(
+          String.raw`(?:^|\n)\s*(?:[-*]\s*)?(?:\*\*)?${lp}${delimiter}([\s\S]*?)(?=\n\s*(?:[-*]\s*)?(?:\*\*)?(?:${stopAlt})${stopDelimiter}|\n\s*#|\n\s*▸|$)`,
+          'i'
+        );
+      }
+
+      function cleanValue(raw) {
+        if (!raw) return '';
+        return String(raw)
+          .replace(/\r/g, '')
+          .replace(/\*\*/g, '')
+          .replace(/^[\s\-–—:]+/, '')
+          .split('\n')
+          .map(line => line.trim())
+          .filter(Boolean)
+          .join(' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+      }
+
+      function readField(labels) {
+        for (const label of labels) {
+          const pat = labelledFieldRegex(label);
+          const m = text.match(pat);
+          if (m && cleanValue(m[1])) return cleanValue(m[1]);
+        }
+        return '';
+      }
+
+      function inferClosureCode(s) {
+        const v = String(s || '').toLowerCase();
+
+        if (/\bs1\b/.test(v) || /not enough structure/.test(v) || /insufficient structure/.test(v)) return 'S1';
+
+        if (/\bs4\b/.test(v) ||
+            /false[-\s]?closure/.test(v) ||
+            /false closure pressure/.test(v) ||
+            /s4 pressure/.test(v) ||
+            /kill-switch/.test(v) ||
+            /subordination test collapses/.test(v) ||
+            /what looks like a solution actually reproduces the problem/.test(v)) {
+          return 'S4';
+        }
+
+        if (/\bs3\b/.test(v) ||
+            /settled path exists/.test(v) ||
+            /settled path is available/.test(v) ||
+            /closure status:\s*a settled path exists/.test(v) ||
+            /canonical closure:\s*available/.test(v) ||
+            /canonical closure available/.test(v) ||
+            /closure via/.test(v) ||
+            /final closure:\s*available/.test(v)) {
+          return 'S3';
+        }
+
+        if (/\bs2\b/.test(v) ||
+            /conditional path exists/.test(v) ||
+            /conditional corridor exists/.test(v) ||
+            /limited corridor/.test(v) ||
+            /not settled/.test(v) ||
+            /no settled answer/.test(v) ||
+            /final closure:\s*unavailable/.test(v) ||
+            /final closure unavailable/.test(v) ||
+            /available only if/.test(v) ||
+            /condition(?:al|ally) available/.test(v)) {
+          return 'S2';
+        }
+
+        return '';
+      }
+
+      fields.closureState = readField(['Closure status', 'Closure state']);
+      fields.finalRecommendation = readField(['Final reading', 'Final recommendation', 'What Ground finds']);
+      fields.nextStep = readField(['Next step', 'What must be resolved']);
+      fields.watchConditions = readField(['Watch conditions', 'What must be watched']);
+      fields.reason = readField(['Reason']);
+      fields.optionC = readField(['Option C']);
+
+      const currentConfig = readField(['Current configuration', 'Current situation reading']);
+      const finalClosure = readField(['Final closure']);
+      const limitedCorridor = readField(['Limited corridor']);
+      const canonicalClosure = readField(['Canonical closure']);
+      const routeStatus = readField(['Route status', 'Current path status']);
+
+      if (!fields.closureState) {
+        if (currentConfig) fields.closureState = currentConfig;
+        else if (finalClosure) fields.closureState = finalClosure;
+        else if (limitedCorridor) fields.closureState = limitedCorridor;
+        else if (routeStatus) fields.closureState = routeStatus;
+      }
+
+      const closureEvidence = [
+        fields.closureState,
+        currentConfig,
+        finalClosure,
+        limitedCorridor,
+        canonicalClosure,
+        routeStatus,
+        fields.finalRecommendation,
+        fields.reason,
+        text,
+      ].join(' ');
+
+      fields.closureStateCode = inferClosureCode(closureEvidence);
+
+      if (fields.closureState && fields.closureState.length > 420) {
+        fields.closureState = fields.closureState.slice(0, 417).trim() + '...';
+      }
+
+      if (!fields.finalRecommendation) {
+        if (fields.closureStateCode === 'S4') {
+          fields.finalRecommendation = 'The current configuration shows false-closure pressure; it should not be treated as settled unless oversight, repair, and affected-party channels are restored.';
+        } else if (fields.closureStateCode === 'S3') {
+          fields.finalRecommendation = 'A settled path is present under the stated conditions; the finding remains valid only while the named watch conditions hold.';
+        } else if (fields.closureStateCode === 'S2') {
+          fields.finalRecommendation = 'A conditional path exists, but the answer is not settled until the named unknowns or stabilising conditions are resolved.';
+        } else if (fields.closureStateCode === 'S1') {
+          fields.finalRecommendation = 'There is not enough structure in the submitted facts to identify a safe closure path.';
+        }
+      }
+
+      if (!fields.nextStep && !fields.watchConditions) {
+        if (fields.closureStateCode === 'S3' && canonicalClosure) {
+          fields.watchConditions = canonicalClosure;
+        } else if (fields.closureStateCode === 'S4' && limitedCorridor) {
+          fields.nextStep = limitedCorridor;
+        } else if (fields.reason) {
+          fields.nextStep = fields.reason;
+        }
+      }
+
+      // v0.5.9e: final inline-label fallback.
+      // If the structured parser still misses Markdown output like:
+      //   **Closure status:** value
+      //   **Final reading:** value
+      // strip Markdown and read the label from its own line.
+      function readInlineField(labels) {
+        const plain = text.replace(/\*\*/g, '');
+        for (const label of labels) {
+          const lp = esc(label).replace(/\s+/g, '\\s+');
+          const pat = new RegExp(`(?:^|\\n)\\s*(?:[-*]\\s*)?${lp}\\s*[:\\-]\\s*([^\\n]+)`, 'i');
+          const m = plain.match(pat);
+          if (m && cleanValue(m[1])) return cleanValue(m[1]);
+        }
+        return '';
+      }
+
+      if (!fields.closureState) {
+        fields.closureState = readInlineField([
+          'Closure status',
+          'Closure state',
+          'Current configuration',
+          'Final closure',
+          'Limited corridor',
+          'Canonical closure',
+          'Route status',
+          'Settled path',
+          'Canonical route',
+        ]);
+      }
+
+      if (!fields.finalRecommendation) {
+        fields.finalRecommendation = readInlineField([
+          'Final reading',
+          'Final recommendation',
+          'What Ground finds',
+        ]);
+      }
+
+      if (!fields.nextStep) {
+        fields.nextStep = readInlineField([
+          'Next step',
+          'What must be resolved',
+        ]);
+      }
+
+      if (!fields.watchConditions) {
+        fields.watchConditions = readInlineField([
+          'Watch conditions',
+          'What must be watched',
+        ]);
+      }
+
+      if (!fields.reason) {
+        fields.reason = readInlineField(['Reason']);
+      }
+
+      if (!fields.closureStateCode) {
+        fields.closureStateCode = inferClosureCode([
+          fields.closureState,
+          fields.finalRecommendation,
+          fields.nextStep,
+          fields.watchConditions,
+          fields.reason,
+          text,
+        ].join(' '));
+      }
+
+      return fields;
+    }
+
+    // Extract unknowns (U1, U2, …) definitions from Kernel core residue or Elimination
+    // result content. Returns [{ key, text }]. Used to surface U-symbol definitions
+    // inline in Plain register so the top block doesn't reference undefined symbols.
+    function extractUnknownsFromSections(kernelContent, elimContent) {
+      const seen = new Set();
+      const unknowns = [];
+
+      // Patterns to scan. Common forms:
+      //   "U1: Whether …"
+      //   "U1 — Whether …"
+      //   "U1 = Whether …"
+      //   "- U1: Whether …"
+      //   "**U1**: Whether …"
+      const sources = [kernelContent || '', elimContent || ''];
+      const unknownRx = /(?:^|\n)\s*(?:[-*]\s*)?(?:\*\*)?\b(U\d+|U[A-Z]\d*)\b(?:\*\*)?\s*[:\-–—=]\s*([^\n]+)/g;
+
+      for (const src of sources) {
+        let m;
+        const rx = new RegExp(unknownRx.source, 'g');
+        while ((m = rx.exec(src)) !== null) {
+          const key = m[1];
+          const text = m[2].trim().replace(/\*\*/g, '').replace(/\s+/g, ' ');
+          if (!seen.has(key) && text) {
+            seen.add(key);
+            unknowns.push({ key, text });
+          }
+        }
+      }
+      return unknowns;
+    }
+
+    // Render the Plain-register top block: Closure state → What Ground finds
+    // → Option C → What must be resolved or watched.
+    function renderPlainTopBlock(container, f, unknowns) {
+      const block = document.createElement('div');
+      block.className = 'plain-top-block';
+
+      const optionCisEmpty = !f.optionC
+        || /^no\b/i.test(f.optionC)
+        || /^none\b/i.test(f.optionC);
+
+      // For S3, "what must be watched" = watch conditions.
+      // For S1/S2, "what must be resolved" = next step (+ reason if present).
+      const isS3 = f.closureStateCode === 'S3';
+      const resolveLabel = isS3 ? 'Watch conditions' : 'What must be resolved';
+      let resolveValue = '';
+      if (isS3 && f.watchConditions) {
+        resolveValue = f.watchConditions;
+      } else if (f.nextStep) {
+        resolveValue = f.nextStep;
+      } else if (f.reason) {
+        resolveValue = f.reason;
+      }
+
+      const rows = [];
+      rows.push(`<div class="ptb-kicker">Current finding · kernel v0.5.6</div>`);
+
+      // 1. Closure state
+      if (f.closureState) {
+        rows.push(`
+          <div class="plain-field">
+            <div class="plain-field-label">Closure state</div>
+            <div class="plain-field-value is-state">${escapeHtml(f.closureState)}</div>
+          </div>
+        `);
+      }
+
+      // 2. What Ground finds (the final-recommendation field, relabeled)
+      if (f.finalRecommendation) {
+        rows.push(`
+          <div class="plain-field">
+            <div class="plain-field-label">What Ground finds</div>
+            <div class="plain-field-value">${escapeHtml(f.finalRecommendation)}</div>
+          </div>
+        `);
+      }
+
+      // 3. Option C — only when present and non-empty
+      if (f.optionC) {
+        const valueClass = optionCisEmpty ? 'plain-field-value is-muted' : 'plain-field-value';
+        rows.push(`
+          <div class="plain-field">
+            <div class="plain-field-label">Option C</div>
+            <div class="${valueClass}">${escapeHtml(f.optionC)}</div>
+          </div>
+        `);
+      }
+
+      // 4. What must be resolved (S1/S2) or watched (S3)
+      if (resolveValue) {
+        rows.push(`
+          <div class="plain-field">
+            <div class="plain-field-label">${escapeHtml(resolveLabel)}</div>
+            <div class="plain-field-value">${escapeHtml(resolveValue)}</div>
+          </div>
+        `);
+      }
+
+      // 4b. If the resolve/watch field references U1/U2/etc., surface their definitions
+      // inline so the top block doesn't depend on the expandable to be readable.
+      const mentionsU = /\bU\d+\b/.test(resolveValue)
+        || /\bU\d+\b/.test(f.finalRecommendation || '')
+        || /\bU\d+\b/.test(f.optionC || '')
+        || /\bU\d+\b/.test(f.reason || '');
+      if (mentionsU && Array.isArray(unknowns) && unknowns.length) {
+        const items = unknowns.map(u => (
+          `<li><span class="u-key">${escapeHtml(u.key)}</span>${escapeHtml(u.text)}</li>`
+        )).join('');
+        rows.push(`
+          <div class="plain-unknowns">
+            <div class="plain-unknowns-label">Unknowns referenced above</div>
+            <ul>${items}</ul>
+          </div>
+        `);
+      }
+
+      // 5. For S3, also surface Reason as "Why this could stop holding"
+      if (isS3 && f.reason) {
+        rows.push(`
+          <div class="plain-field">
+            <div class="plain-field-label">Why this could stop holding</div>
+            <div class="plain-field-value">${escapeHtml(f.reason)}</div>
+          </div>
+        `);
+      }
+
+      block.innerHTML = rows.join('');
+      container.appendChild(block);
+    }
+
+    // Render the expandable "Why Ground reached this reading" — collapses the
+    // institutional deep structure + consistency check into a disclosure.
+    function renderPlainWhyExpandable(container, sections, sectionConfig, invariance) {
+      const why = document.createElement('div');
+      why.className = 'plain-why';
+
+      const toggle = document.createElement('button');
+      toggle.type = 'button';
+      toggle.className = 'plain-why-toggle';
+      toggle.innerHTML = `<span class="ptw-caret">▸</span> Why Ground reached this reading`;
+
+      const content = document.createElement('div');
+      content.className = 'plain-why-content';
+
+      const caption = document.createElement('div');
+      caption.className = 'plain-why-caption';
+      caption.textContent = 'The structural finding above was produced by the kernel below. '
+        + 'Reading it is optional — the finding does not change.';
+      content.appendChild(caption);
+
+      // Render the four full sections (same as non-plain register) inside the disclosure.
+      sectionConfig.forEach((cfg) => {
+        const section = sections.find(s => s.heading.toLowerCase().includes(cfg.key));
+        const card = document.createElement('div');
+        card.className = 'result-card';
+        const badgeHtml = cfg.badge
+          ? `<span class="section-badge badge-${cfg.badge === 'NON-INDEXICAL' ? 'non-indexical' : 'illustrative'}">${cfg.badge}</span>`
+          : '';
+        if (cfg.key === 'coherence signature') {
+          card.innerHTML = `
+            <div class="card-label">${cfg.label} ${badgeHtml}</div>
+            <div class="coherence-signature">
+              ${renderCoherenceSignature(section?.content || '')}
+            </div>
+          `;
+        } else {
+          card.innerHTML = `
+            <div class="card-label">${cfg.label} ${badgeHtml}</div>
+            <div class="card-content">${markdownToHtml(section?.content || '')}</div>
+          `;
+        }
+        content.appendChild(card);
+      });
+
+      // Plain-translated consistency check (replaces Institutional invariance card).
+      if (invariance) {
+        content.appendChild(renderPlainConsistencyCard(invariance));
+      }
+
+      why.appendChild(toggle);
+      why.appendChild(content);
+
+      toggle.addEventListener('click', () => {
+        why.classList.toggle('is-open');
+      });
+
+      container.appendChild(why);
+    }
+
+    // Plain-language rendering of the spine-agreement invariance check.
+    function renderPlainConsistencyCard(invariance) {
+      const status = invariance.status || 'unavailable';
+      const copy = {
+        stable: {
+          header: 'Consistency check',
+          statusLabel: 'Good',
+          interp: 'The shape of this reading reproduced when rephrased. The finding is structural, not framing-dependent.',
+          isWeak: false,
+        },
+        unstable: {
+          header: 'Consistency check',
+          statusLabel: 'Weak',
+          interp: 'This case changed shape when rephrased, so treat this reading as provisional rather than final. The underlying structure shifted between paraphrases, which means the finding may be partly sensitive to how the situation is described.',
+          isWeak: true,
+        },
+        unavailable: {
+          header: 'Consistency check',
+          statusLabel: 'Not available',
+          interp: 'The consistency check could not produce a usable signal — not a problem with the reading, just a gap in the check.',
+          isWeak: false,
+        },
+      }[status] || {
+        header: 'Consistency check',
+        statusLabel: 'Not available',
+        interp: 'The consistency check is unavailable for this reading.',
+        isWeak: false,
+      };
+
+      const card = document.createElement('div');
+      card.className = 'plain-consistency-card' + (copy.isWeak ? ' is-weak' : '');
+
+      // Details payload — hashes, agreement, failure mode — collapsed by default.
+      const details = [];
+      if (invariance.spine_hash) details.push(['Spine hash', invariance.spine_hash]);
+      if (invariance.hash)       details.push(['Core hash',  invariance.hash]);
+      if (typeof invariance.agreement_count === 'number' && typeof invariance.valid_run_count === 'number') {
+        const quorum = invariance.stable_quorum || 3;
+        details.push(['Spine agreement', `${invariance.agreement_count} / ${invariance.valid_run_count} converged (quorum: ${quorum})`]);
+      }
+      if (invariance.failure_reason && invariance.failure_reason !== 'ok') {
+        details.push(['Failure mode', invariance.failure_reason]);
+      }
+
+      const detailsHtml = details.length
+        ? details.map(([k, v]) =>
+            `<div class="inv-row"><span class="inv-key">${escapeHtml(k)}</span><span class="inv-val"><code>${escapeHtml(v)}</code></span></div>`
+          ).join('')
+        : '';
+
+      card.innerHTML = `
+        <div class="plain-consistency-header">${escapeHtml(copy.header)}</div>
+        <div class="plain-consistency-status${copy.isWeak ? ' is-weak' : ''}">${escapeHtml(copy.statusLabel)}</div>
+        <div class="plain-consistency-interp">${escapeHtml(copy.interp)}</div>
+        ${detailsHtml ? `
+          <button type="button" class="plain-consistency-details-toggle">Show technical details ▸</button>
+          <div class="plain-consistency-details invariance-content">${detailsHtml}</div>
+        ` : ''}
+      `;
+
+      // Wire the details toggle if present.
+      const detailsToggle = card.querySelector('.plain-consistency-details-toggle');
+      if (detailsToggle) {
+        detailsToggle.addEventListener('click', () => {
+          card.classList.toggle('is-details-open');
+          detailsToggle.textContent = card.classList.contains('is-details-open')
+            ? 'Hide technical details ▾'
+            : 'Show technical details ▸';
+        });
+      }
+
+      return card;
+    }
+
+    function renderCoherenceSignature(content) {
+      const lines = content.split('\n');
+      let html = '';
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || !trimmed.startsWith('-')) continue;
+        let match = trimmed.match(/^-\s*\*\*(.+?)\*\*:?\s*(.+)$/);
+        if (!match) {
+          match = trimmed.match(/^-\s*([^:]+?):\s*(.+)$/);
+        }
+        if (!match) continue;
+        const label = match[1].replace(/\*\*/g, '').replace(/:$/, '').trim();
+        const value = match[2].replace(/\*\*/g, '').trim();
+        const catClass = getAxisCategory(label, value);
+        html += `
+          <div class="signature-item">
+            <span class="signature-label">${label}</span>
+            <span class="signature-value ${catClass}">${value}</span>
+          </div>
+        `;
+      }
+      return html || '<div style="padding:14px 18px;color:var(--ink-3);font-style:italic;">No signature data.</div>';
+    }
+
+    function getAxisCategory(label, value) {
+      if (value.toLowerCase().includes('uncertain')) return 'cat-uncertain';
+      const l = label.toLowerCase();
+      if (l.includes('l-signature') || l.includes('propagation')) return 'cat-l';
+      if (l.includes('f-signature') || l.includes('bypass')) return 'cat-f';
+      if (l.includes('tension') || l.includes('recognition') || l.includes('repair') || l.includes('role')) return 'cat-relational';
+      return 'cat-structural';
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function markdownToHtml(text) {
+      if (!text) return '';
+      let html = text
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .split('\n\n')
+        .map(para => {
+          const trimmed = para.trim();
+          if (trimmed.startsWith('- ')) {
+            const items = trimmed.split('\n').map(line => line.replace(/^- /, ''));
+            return '<ul>' + items.map(item => `<li>${item}</li>`).join('') + '</ul>';
+          }
+          return `<p>${trimmed}</p>`;
+        })
+        .join('');
+      return html;
+    }
+
+    function renderSafetyResult(safetyText) {
+      const container = document.getElementById('resultsContainer');
+      container.innerHTML = `
+        <div class="crisis-card">
+          <div class="crisis-title">Structural reading suspended</div>
+          <div class="crisis-content">
+            ${markdownToHtml(safetyText)}
+          </div>
+        </div>
+      `;
+      document.querySelectorAll('.result-card').forEach(card => {
+        card.classList.add('hidden');
+      });
+    }
+
+    // ==================== USAGE BAR ====================
+    function updateUsageBar() {
+      const percentage = (appState.usage / CONFIG.MAX_DAILY_REFLECTIONS) * 100;
+      document.getElementById('usageFill').style.width = percentage + '%';
+      document.getElementById('usageCount').textContent = appState.usage;
+      document.getElementById('remainingReflections').textContent = appState.remainingReflections;
+    }
+
+    // ==================== HISTORY ====================
+    async function loadHistory() {
+      try {
+        const response = await fetch('/api/history');
+        const data = await response.json();
+        appState.history = data.reflections || [];
+        renderHistory();
+      } catch (error) {
+        console.log('Error loading history:', error);
+      }
+    }
+
+    function renderHistory() {
+      const container = document.getElementById('historyContainer');
+      container.innerHTML = '';
+      if (appState.history.length === 0) {
+        container.innerHTML = '<div class="history-empty">No readings yet on this device.</div>';
+        return;
+      }
+      appState.history.forEach((reflection) => {
+        const date = new Date(reflection.created_at);
+        const dateStr = date.toLocaleDateString('en-GB', {
+          year: 'numeric', month: 'short', day: '2-digit',
+          hour: '2-digit', minute: '2-digit',
+        });
+        const preview = reflection.user_text.substring(0, 140) + (reflection.user_text.length > 140 ? '…' : '');
+        const tag = reflection.response ? 'Issued' : 'Processing';
+
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        item.innerHTML = `
+          <div class="history-date">${dateStr}</div>
+          <div class="history-preview">${preview}</div>
+          <span class="history-tag">${tag}</span>
+        `;
+        item.addEventListener('click', () => showHistoryDetail(reflection));
+        container.appendChild(item);
+      });
+    }
+
+    function showHistoryDetail(reflection) {
+      const modal = document.createElement('div');
+      modal.className = 'history-modal-overlay';
+      modal.innerHTML = `
+        <div class="history-modal">
+          <div class="history-modal-header">
+            <h2>Reading</h2>
+            <button class="history-modal-close">Close ×</button>
+          </div>
+          <div class="history-modal-content">
+            <div class="history-detail-section">
+              <div class="history-detail-label">Your submission</div>
+              <div class="history-detail-text">${reflection.user_text}</div>
+            </div>
+            ${reflection.optional_want ? `
+              <div class="history-detail-section">
+                <div class="history-detail-label">What you wanted</div>
+                <div class="history-detail-text">${reflection.optional_want}</div>
+              </div>
+            ` : ''}
+            ${reflection.optional_fear ? `
+              <div class="history-detail-section">
+                <div class="history-detail-label">What you feared</div>
+                <div class="history-detail-text">${reflection.optional_fear}</div>
+              </div>
+            ` : ''}
+            ${reflection.response ? `
+              <div class="history-detail-section">
+                <div class="history-detail-label">Structural reading</div>
+                <div class="history-detail-text">${markdownToHtml(reflection.response.text || '')}</div>
+              </div>
+            ` : ''}
+            <div class="history-detail-meta">
+              <div class="history-detail-date">${new Date(reflection.created_at).toLocaleDateString('en-GB', {
+                year: 'numeric', month: 'long', day: '2-digit',
+                hour: '2-digit', minute: '2-digit'
+              })}</div>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const closeBtn = modal.querySelector('.history-modal-close');
+      closeBtn.addEventListener('click', () => modal.remove());
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+      });
+    }
+
+    // ==================== RESET ====================
+    function resetToMain() {
+      document.getElementById('userText').value = '';
+      document.getElementById('optionalWant').value = '';
+      document.getElementById('optionalFear').value = '';
+      appState.optionalExpanded = false;
+      document.getElementById('optionalContent').classList.remove('active');
+      document.querySelector('.optional-toggle').textContent = '+';
+      updateCharCount();
+      showScreen('main');
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+
+</body>
+</html>
+
+
