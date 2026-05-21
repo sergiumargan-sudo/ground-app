@@ -1175,6 +1175,98 @@ section { padding: 72px 20px; }
   margin-bottom: 14px;
 }
 
+/* === REVIEW PLATFORMS SECTION === */
+.review-platforms-section { background: var(--white); }
+
+.review-platforms-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.rp-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: var(--bg-light);
+  border-radius: 12px;
+  padding: 32px 24px 28px;
+  text-decoration: none;
+  border: 1px solid var(--border);
+  border-top: 4px solid var(--border);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.rp-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 32px rgba(0,0,0,0.12);
+}
+
+.rp-card--google { border-top-color: #4285F4; }
+.rp-card--checkatrade { border-top-color: #009933; }
+.rp-card--trustatrader { border-top-color: #003087; }
+
+.rp-card-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.rp-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--white);
+}
+
+.rp-icon--google { background: #4285F4; }
+.rp-icon--checkatrade { background: #009933; font-size: 1.9rem; }
+.rp-icon--trustatrader { background: #003087; font-size: 1.9rem; }
+
+.rp-platform {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.rp-score {
+  font-size: 2.4rem;
+  font-weight: 800;
+  color: var(--navy);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.rp-stars {
+  color: #f5a623;
+  font-size: 1.2rem;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+}
+
+.rp-count {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  margin-bottom: 20px;
+}
+
+.rp-link {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--orange);
+  margin-top: auto;
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 992px) {
   .services-grid { grid-template-columns: repeat(2, 1fr); }
@@ -1232,6 +1324,7 @@ section { padding: 72px 20px; }
   .install-steps { grid-template-columns: 1fr; }
   .dryseal-features { grid-template-columns: 1fr; }
   .service-links-grid { grid-template-columns: 1fr; }
+  .review-platforms-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 480px) {
