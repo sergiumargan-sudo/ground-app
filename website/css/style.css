@@ -7,6 +7,8 @@
   --bg-light: #f8f9fa;
   --white: #ffffff;
   --red: #c0392b;
+  --border: #dde3ec;
+  --radius: 8px;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -736,7 +738,7 @@ section { padding: 72px 20px; }
 }
 
 .sidebar-trust ul li::before {
-  content: '✓';
+  content: '\2713';
   color: var(--orange);
   font-weight: 700;
   flex-shrink: 0;
@@ -925,7 +927,7 @@ section { padding: 72px 20px; }
 }
 
 .about-credentials ul li::before {
-  content: '✓';
+  content: '\2713';
   color: var(--orange);
   font-weight: 700;
   flex-shrink: 0;
@@ -1089,3 +1091,106 @@ section { padding: 72px 20px; }
   .portfolio-grid { grid-template-columns: 1fr; }
   .footer-bottom { flex-direction: column; text-align: center; }
 }
+
+/* === DIFFERENTIATOR SECTION (homepage) === */
+.differentiator-section { padding: 80px 0; background: var(--bg-light); }
+.differentiator-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-top: 40px;
+}
+.diff-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  border-top: 3px solid var(--orange);
+  transition: box-shadow 0.2s ease;
+}
+.diff-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.1); }
+.diff-icon { font-size: 2rem; margin-bottom: 14px; }
+.diff-card h3 { color: var(--navy); font-size: 1.05rem; font-weight: 700; margin-bottom: 10px; }
+.diff-card p { color: var(--text-light); font-size: 0.9rem; line-height: 1.6; margin-bottom: 12px; }
+.diff-card a { color: var(--orange); font-size: 0.85rem; font-weight: 600; }
+
+/* === WARRANTY CALLOUT === */
+.warranty-callout {
+  background: #fff8f0;
+  border: 2px solid var(--orange);
+  border-radius: var(--radius);
+  padding: 24px 28px;
+  margin: 32px 0;
+}
+.warranty-callout-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 10px;
+}
+.warranty-callout p { color: var(--text); margin: 0; line-height: 1.6; }
+
+/* === APPROVED INSTALLER BADGE === */
+.installer-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--navy);
+  color: var(--white);
+  padding: 10px 18px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 24px;
+}
+.installer-badge span { color: var(--orange); }
+
+/* === CREDENTIALS LIST === */
+.credentials-list {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0;
+}
+.credentials-list li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.95rem;
+}
+.credentials-list li:last-child { border-bottom: none; }
+.credentials-list li::before {
+  content: '\2713';
+  color: var(--orange);
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* === HOW WE WORK (about page) === */
+.how-we-work { margin: 40px 0; }
+.how-we-work h2 { color: var(--navy); font-size: 1.5rem; font-weight: 700; margin-bottom: 24px; }
+.how-item {
+  display: flex;
+  gap: 20px;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--border);
+  align-items: flex-start;
+}
+.how-item:last-child { border-bottom: none; }
+.how-number {
+  background: var(--orange);
+  color: var(--white);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+.how-item h3 { color: var(--navy); font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+.how-item p { color: var(--text); font-size: 0.92rem; line-height: 1.65; margin: 0; }
