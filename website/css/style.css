@@ -71,6 +71,12 @@ img { max-width: 100%; height: auto; display: block; }
   margin-top: -4px;
 }
 
+.logo img {
+  height: 44px;
+  width: auto;
+  display: block;
+}
+
 .main-nav ul {
   list-style: none;
   display: flex;
@@ -871,12 +877,42 @@ section { padding: 72px 20px; }
   padding: 60px 20px;
 }
 
+.portfolio-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.portfolio-filters {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 36px;
+}
+
+.filter-btn {
+  background: var(--white);
+  border: 2px solid var(--border);
+  color: var(--text);
+  padding: 9px 20px;
+  border-radius: 30px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+  font-family: inherit;
+}
+
+.filter-btn:hover,
+.filter-btn.active {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: var(--white);
+}
+
 .portfolio-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 24px;
-  max-width: 1200px;
-  margin: 0 auto;
 }
 
 .portfolio-item {
@@ -884,6 +920,19 @@ section { padding: 72px 20px; }
   overflow: hidden;
   box-shadow: 0 2px 12px rgba(0,0,0,0.08);
   background: var(--white);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.portfolio-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.14);
+}
+
+.portfolio-item img {
+  width: 100%;
+  height: 230px;
+  object-fit: cover;
+  display: block;
 }
 
 .portfolio-img {
@@ -898,9 +947,37 @@ section { padding: 72px 20px; }
 
 .portfolio-caption {
   padding: 14px 16px;
+}
+
+.portfolio-caption strong {
+  display: block;
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--navy);
+  margin-bottom: 3px;
+}
+
+.portfolio-caption span {
+  font-size: 0.82rem;
+  color: var(--text-light);
+}
+
+.portfolio-cta {
+  background: var(--white);
+  padding: 72px 20px;
+}
+
+.portfolio-cta h2 {
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  color: var(--navy);
+  margin-bottom: 12px;
+}
+
+.portfolio-cta p {
+  color: var(--text-light);
+  font-size: 1.05rem;
+  max-width: 560px;
+  margin: 0 auto;
 }
 
 /* ===== ABOUT ===== */
