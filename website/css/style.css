@@ -1219,6 +1219,8 @@ section { padding: 72px 20px; }
   .why-us-grid { grid-template-columns: 1fr; }
   .footer-grid { grid-template-columns: 1fr; }
   .form-row { grid-template-columns: 1fr; }
+  .install-steps { grid-template-columns: 1fr; }
+  .dryseal-features { grid-template-columns: 1fr; }
   .service-links-grid { grid-template-columns: 1fr; }
 }
 
@@ -1229,6 +1231,10 @@ section { padding: 72px 20px; }
   .trust-bar-inner { grid-template-columns: 1fr 1fr; }
   .portfolio-grid { grid-template-columns: 1fr; }
   .footer-bottom { flex-direction: column; text-align: center; }
+  .install-steps { grid-template-columns: 1fr; }
+  .dryseal-features { grid-template-columns: 1fr; }
+  .hd-badge { flex-direction: column; max-width: 100%; }
+  .hd-badge-logo { min-width: unset; }
 }
 
 /* === DIFFERENTIATOR SECTION (homepage) === */
@@ -1269,7 +1275,117 @@ section { padding: 72px 20px; }
 }
 .warranty-callout p { color: var(--text); margin: 0; line-height: 1.6; }
 
-/* === APPROVED INSTALLER BADGE === */
+/* === HAMBLESIDE DANELAW ACCREDITATION BADGE === */
+.hd-badge {
+  display: inline-flex;
+  align-items: stretch;
+  border: 2px solid #401e6e;
+  border-radius: 8px;
+  overflow: hidden;
+  text-decoration: none;
+  margin-bottom: 32px;
+  max-width: 420px;
+  transition: box-shadow 0.2s, transform 0.15s;
+}
+.hd-badge:hover { box-shadow: 0 4px 20px rgba(64,30,110,0.22); transform: translateY(-1px); }
+.hd-badge-logo {
+  background: #401e6e;
+  color: #fff;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  min-width: 140px;
+}
+.hd-brand { font-weight: 800; font-size: 0.95rem; letter-spacing: -0.2px; line-height: 1.2; }
+.hd-sub { font-size: 0.72rem; opacity: 0.75; font-weight: 400; text-transform: uppercase; letter-spacing: 0.5px; }
+.hd-badge-cert {
+  background: #fff;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  border-left: 1px solid #e0d0f0;
+}
+.hd-cert-title { font-weight: 700; color: #401e6e; font-size: 0.92rem; line-height: 1.2; }
+.hd-cert-sub { font-size: 0.75rem; color: var(--text-light); }
+
+/* === INSTALLATION STEPS === */
+.install-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin: 32px 0;
+}
+.install-step {
+  background: var(--bg-light);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+}
+.install-step img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  display: block;
+}
+.install-step-body { padding: 18px; }
+.install-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background: var(--orange);
+  color: #fff;
+  border-radius: 50%;
+  font-weight: 800;
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+}
+.install-step h4 { font-size: 0.95rem; color: var(--navy); margin-bottom: 6px; }
+.install-step p { font-size: 0.85rem; color: var(--text-light); margin: 0; line-height: 1.5; }
+
+/* === VIDEO EMBED === */
+.video-container {
+  position: relative;
+  padding-bottom: 56.25%;
+  height: 0;
+  overflow: hidden;
+  border-radius: 10px;
+  margin: 32px 0;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+}
+.video-container iframe {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  border: none;
+}
+
+/* === DRYSEAL FEATURES GRID === */
+.dryseal-features {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin: 24px 0 32px;
+}
+.dryseal-feature {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  background: var(--bg-light);
+  padding: 16px 18px;
+  border-radius: 8px;
+  border-left: 3px solid var(--orange);
+}
+.dryseal-feature-icon { font-size: 1.4rem; flex-shrink: 0; line-height: 1; }
+.dryseal-feature h4 { font-size: 0.9rem; color: var(--navy); margin-bottom: 4px; }
+.dryseal-feature p { font-size: 0.83rem; color: var(--text-light); margin: 0; line-height: 1.45; }
+
+/* === APPROVED INSTALLER BADGE (legacy, keep for other pages) === */
 .installer-badge {
   display: inline-flex;
   align-items: center;
