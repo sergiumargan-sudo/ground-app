@@ -61,6 +61,66 @@ document.addEventListener('click', function (e) {
   });
 })();
 
+// Reviews carousel
+(function () {
+  const track = document.querySelector('.rc-track');
+  if (!track) return;
+
+  let slides = Array.from(track.querySelectorAll('.rc-slide'));
+  const dots   = Array.from(document.querySelectorAll('.rc-dot'));
+  const prevBtn = document.querySelector('.rc-prev');
+  const nextBtn = document.querySelector('.rc-next');
+  const outer   = document.querySelector('.rc-outer');
+  const INTERVAL = 5500;
+
+  // Shuffle order randomly on each page load
+  for (let i = slides.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    track.appendChild(slides[j]);
+    [slides[i], slides[j]] = [slides[j], slides[i]];
+  }
+  slides = Array.from(track.querySelectorAll('.rc-slide'));
+
+  let current = 0;
+  let timer;
+
+  function show(idx) {
+    slides.forEach((s, i) => s.classList.toggle('rc-active', i === idx));
+    dots.forEach((d, i)  => d.classList.toggle('active',    i === idx));
+    track.style.height = slides[idx].scrollHeight + 'px';
+    current = idx;
+  }
+
+  function advance() { show((current + 1) % slides.length); }
+  function retreat() { show((current - 1 + slides.length) % slides.length); }
+
+  function startTimer() { timer = setInterval(advance, INTERVAL); }
+  function stopTimer()  { clearInterval(timer); }
+
+  show(0);
+  startTimer();
+
+  if (nextBtn) nextBtn.addEventListener('click', () => { stopTimer(); advance(); startTimer(); });
+  if (prevBtn) prevBtn.addEventListener('click', () => { stopTimer(); retreat(); startTimer(); });
+
+  dots.forEach((dot, i) => {
+    dot.addEventListener('click', () => { stopTimer(); show(i); startTimer(); });
+  });
+
+  if (outer) {
+    outer.addEventListener('mouseenter', stopTimer);
+    outer.addEventListener('mouseleave', startTimer);
+  }
+
+  window.addEventListener('resize', () => {
+    track.style.height = slides[current].scrollHeight + 'px';
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stopTimer(); else startTimer();
+  });
+})();
+
 // Smooth scroll for anchor links
 document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
   anchor.addEventListener('click', function (e) {
