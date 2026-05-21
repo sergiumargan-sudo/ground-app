@@ -73,9 +73,12 @@ img { max-width: 100%; height: auto; display: block; }
 }
 
 .logo img {
-  height: 44px;
+  height: 62px;
   width: auto;
   display: block;
+  background: white;
+  padding: 7px 14px;
+  border-radius: 8px;
 }
 
 .main-nav ul {
