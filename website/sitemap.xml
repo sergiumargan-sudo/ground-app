@@ -240,4 +240,29 @@
     <priority>0.7</priority>
   </url>
 
+  <url>
+    <loc>https://sbmarganroofing.uk/blog/</loc>
+    <lastmod>2026-05-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://sbmarganroofing.uk/blog/how-long-does-a-flat-roof-last.html</loc>
+    <lastmod>2026-05-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://sbmarganroofing.uk/blog/winter-roof-inspection-guide.html</loc>
+    <lastmod>2026-05-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://sbmarganroofing.uk/blog/dryseal-grp-flat-roofing-explained.html</loc>
+    <lastmod>2026-05-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
 </urlset>

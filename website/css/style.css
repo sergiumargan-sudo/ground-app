@@ -613,8 +613,8 @@ section { padding: 72px 20px; }
 
 .footer-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1.5fr;
-  gap: 40px;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 1.5fr;
+  gap: 32px;
   max-width: 1200px;
   margin: 0 auto 40px;
 }
