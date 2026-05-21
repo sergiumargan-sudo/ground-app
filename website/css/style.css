@@ -43,11 +43,22 @@ img { max-width: 100%; height: auto; display: block; }
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
-.header-inner {
+.header-brand {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 20px;
+  padding: 12px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.main-nav {
+  border-top: 1px solid rgba(255,255,255,0.12);
+}
+
+.main-nav > ul {
+  justify-content: center;
+  padding: 4px 20px 8px;
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -1212,6 +1223,11 @@ section { padding: 72px 20px; }
 
   .main-nav .dropdown-menu li a { color: rgba(255,255,255,0.75); }
 
+  .main-nav { border-top: none; }
+  .main-nav > ul { padding: 0; max-width: none; }
+
+  .header-phone { display: none; }
+
   .site-header { position: relative; }
 
   .services-grid { grid-template-columns: 1fr; }
@@ -1277,13 +1293,13 @@ section { padding: 72px 20px; }
 
 /* === HAMBLESIDE DANELAW ACCREDITATION BADGE === */
 .hd-badge {
-  display: inline-flex;
+  display: flex;
   align-items: stretch;
   border: 2px solid #401e6e;
   border-radius: 8px;
   overflow: hidden;
   text-decoration: none;
-  margin-bottom: 32px;
+  margin: 0 auto 32px;
   max-width: 420px;
   transition: box-shadow 0.2s, transform 0.15s;
 }
